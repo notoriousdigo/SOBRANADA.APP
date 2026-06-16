@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sobra Nada">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d1410">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>SOBRA NADA APP</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0d1410; --bg2:#121c16; --card:#16231b; --card2:#1d2f24;
+    --line:#26392d; --txt:#e8f5ec; --muted:#8aa394;
+    --green:#46c932; --green2:#7de85b; --greenDk:#2c8c20;
+    --bad:#ff6b5e; --gold:#ffce4f;
+    --r:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg); color:var(--txt);
+    padding:env(safe-area-inset-top) 0 calc(74px + env(safe-area-inset-bottom));
+    overflow-x:hidden;
+  }
+  .app{max-width:560px;margin:0 auto;padding:16px}
+  header.top{display:flex;align-items:center;justify-content:space-between;padding:6px 4px 14px}
+  header.top .brand{display:flex;align-items:center;gap:10px}
+  header.top .brand b{font-size:18px;font-weight:900;font-style:italic;letter-spacing:-.5px}
+  header.top .brand b .g{color:var(--green2)}
+  .lvlchip{background:var(--card2);border:1px solid var(--line);border-radius:999px;
+    padding:6px 12px;font-size:12px;font-weight:700;display:flex;gap:6px;align-items:center}
+  .lvlchip .star{color:var(--gold)}
+  .lvlchip.red{background:#3a1411;border-color:#7a2a23;color:#ff8a7e}
+  .lvlchip.red .star{color:var(--bad)}
+
+  .screen{display:none;animation:fade .25s ease}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  h2.sec{font-size:14px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin:22px 4px 10px}
+
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .card{background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);
+    border-radius:var(--r);padding:16px}
+  .card .lbl{font-size:12px;color:var(--muted);font-weight:600}
+  .card .val{font-size:24px;font-weight:900;margin-top:6px;letter-spacing:-.5px}
+  .card .val.pos{color:var(--green2)} .card .val.neg{color:var(--bad)}
+  .card.wide{grid-column:1/3}
+
+  .xpbar{height:10px;background:var(--bg);border-radius:999px;overflow:hidden;margin-top:10px;border:1px solid var(--line)}
+  .xpbar>i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--green2));border-radius:999px;transition:width .5s}
+
+  .chartwrap{background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);
+    border-radius:var(--r);padding:14px;margin-top:4px}
+  canvas{width:100%!important;height:200px!important}
+
+  .item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;
+    display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .item .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:20px;
+    background:var(--card2);flex:none}
+  .item .mid{flex:1;min-width:0}
+  .item .mid .t{font-weight:700;font-size:15px}
+  .item .mid .s{font-size:12px;color:var(--muted);margin-top:2px}
+  .item .amt{font-weight:900;color:var(--green2);white-space:nowrap}
+  .item .del{background:none;border:none;color:var(--muted);font-size:18px;padding:6px;cursor:pointer}
+
+  .goal .gbar{height:8px;background:var(--bg);border-radius:999px;overflow:hidden;margin-top:8px;border:1px solid var(--line)}
+  .goal .gbar>i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--green2));border-radius:999px;transition:width .5s}
+  .goal .grow{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+  .goal .done{color:var(--gold);font-size:12px;font-weight:800}
+
+  .empty{text-align:center;color:var(--muted);padding:30px 16px;font-size:14px;line-height:1.5}
+  .empty img{width:120px;opacity:.95;margin-bottom:8px}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;
+    font-weight:800;font-size:15px;border-radius:14px;padding:14px 18px;width:100%}
+  .btn.primary{background:linear-gradient(135deg,var(--green),var(--greenDk));color:#06210a}
+  .btn.ghost{background:var(--card2);color:var(--txt);border:1px solid var(--line)}
+  .btn.sm{width:auto;padding:10px 14px;font-size:13px}
+  .row2{display:flex;gap:10px;margin-top:10px}
+
+  label.f{display:block;font-size:12px;color:var(--muted);font-weight:600;margin:14px 0 6px 2px}
+  input,select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);
+    border-radius:12px;padding:13px 14px;font-size:16px;font-family:inherit}
+  input:focus,select:focus{outline:none;border-color:var(--green)}
+
+  /* sheet modal */
+  .sheet{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-end;z-index:50}
+  .sheet.open{display:flex}
+  .sheet .box{background:var(--bg2);width:100%;max-width:560px;margin:0 auto;border-radius:22px 22px 0 0;
+    padding:20px 18px calc(24px + env(safe-area-inset-bottom));border:1px solid var(--line);border-bottom:none;
+    animation:up .25s ease}
+  @keyframes up{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+  .sheet h3{font-size:18px;font-weight:900;margin-bottom:4px}
+  .sheet .seg{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .sheet .seg button{flex:1;min-width:30%;background:var(--bg);border:1px solid var(--line);color:var(--muted);
+    border-radius:12px;padding:11px;font-weight:700;font-size:13px;cursor:pointer}
+  .sheet .seg button.on{background:var(--green);color:#06210a;border-color:var(--green)}
+  .chk{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:14px;color:var(--muted)}
+  .chk input{width:auto}
+
+  .gbar>i.over{background:linear-gradient(90deg,#ff6b5e,#ff9d4f)}
+  .binput{width:104px;background:var(--bg);border:1px solid var(--line);color:var(--txt);
+    border-radius:10px;padding:9px 10px;font-size:15px;text-align:right;flex:none}
+  .overmsg{color:var(--bad);font-size:12px;font-weight:800;margin-top:8px}
+  .val.neg{color:var(--bad)}
+
+  /* mascote vivo */
+  .mascot{align-items:center}
+  .mascot.mood-bravo{border-color:#7a2a23;background:linear-gradient(160deg,#3a1a17,#221010)}
+  .mascot.mood-ok{border-color:#6b5a2a}
+  .mascot.mood-feliz,.mascot.mood-gordo{border-color:var(--greenDk);background:linear-gradient(160deg,#19331a,#16231b)}
+  .mascot img{transition:width .4s ease;animation:idle 3.6s ease-in-out infinite}
+  .mascot.fase-3 img{filter:drop-shadow(0 0 6px rgba(125,232,91,.6))}
+  .mascot.fase-4{border-color:var(--gold)}
+  .mascot.fase-4 img{filter:drop-shadow(0 0 10px rgba(255,206,79,.85))}
+  .fasechip{background:var(--bg);border:1px solid var(--line);color:var(--green2);font-size:10px;
+    font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap}
+  @keyframes idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+  .mascot.mood-feliz img,.mascot.mood-gordo img{animation:bob 2.4s ease-in-out infinite}
+  .mascot.mood-bravo img{animation:shake .5s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  @keyframes shake{0%,100%{transform:rotate(0)}25%{transform:rotate(-5deg)}75%{transform:rotate(5deg)}}
+  /* galeria de conquistas */
+  .galeria{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .badge{background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);
+    border-radius:14px;padding:12px 8px;text-align:center}
+  .badge .medal{font-size:28px;filter:drop-shadow(0 2px 4px rgba(255,206,79,.4))}
+  .badge .bl{font-size:11px;font-weight:700;line-height:1.25;margin-top:6px}
+  .badge .bd{font-size:10px;color:var(--muted);margin-top:4px}
+
+  /* em breve (roadmap v2) */
+  .item.soon{opacity:.55;filter:grayscale(.4)}
+  .item.soon .t,.item.soon .s{color:var(--muted)}
+  .soonpill{background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:10px;
+    font-weight:800;padding:4px 9px;border-radius:999px;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px;flex:none}
+
+  /* tamagotchi — cuidar do QUASE NADA */
+  .tama{background:linear-gradient(135deg,#1d3a18,#16231b);border:1px solid var(--greenDk);border-radius:var(--r);padding:16px;margin-bottom:12px}
+  .tama .grow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .tama .t{font-weight:800;font-size:15px}
+  .tama .s{font-size:12px;color:var(--muted);margin-top:2px}
+  .enbar{height:12px;background:var(--bg);border-radius:999px;overflow:hidden;margin-top:12px;border:1px solid var(--line)}
+  .enbar>i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--green2));border-radius:999px;transition:width .5s}
+  .enbar>i.mid{background:linear-gradient(90deg,#caa23a,#ffce4f)}
+  .enbar>i.low{background:linear-gradient(90deg,#ff6b5e,#ff9d4f)}
+  /* cofrinho (jarra que enche) */
+  .jar{position:relative;width:66px;height:84px;flex:none;background:var(--bg);border:2px solid var(--line);
+    border-radius:14px 14px 22px 22px;overflow:hidden;box-shadow:inset 0 2px 6px rgba(0,0,0,.3)}
+  .jar-fill{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,var(--green2),var(--greenDk));
+    transition:height .7s cubic-bezier(.4,1.4,.6,1)}
+  .jar-coin{position:absolute;top:5px;left:50%;transform:translateX(-50%);font-size:15px;z-index:2;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
+  .badge.locked{opacity:.38;filter:grayscale(1)}
+
+  /* merreca hero */
+  .merreca{background:linear-gradient(135deg,#1d3a18,#16231b);border:1px solid var(--greenDk);border-radius:var(--r);padding:18px;margin-bottom:12px}
+  .merreca .big{font-size:34px;font-weight:900;color:var(--green2);letter-spacing:-1px;margin-top:2px}
+  .merreca .sub{font-size:13px;color:var(--muted);margin-top:8px}
+  .merreca .sub b{color:var(--green2)}
+
+  /* bottom nav */
+  nav.tabs{position:fixed;bottom:0;left:0;right:0;background:rgba(13,20,16,.92);backdrop-filter:blur(12px);
+    border-top:1px solid var(--line);display:flex;justify-content:space-around;
+    padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:40}
+  nav.tabs button{background:none;border:none;color:var(--muted);font-size:11px;font-weight:700;
+    display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 12px}
+  nav.tabs button .i{font-size:20px}
+  nav.tabs button.on{color:var(--green2)}
+
+  .fab{position:fixed;right:18px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:41;
+    width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;font-size:28px;font-weight:300;
+    background:linear-gradient(135deg,var(--green2),var(--greenDk));color:#06210a;
+    box-shadow:0 8px 22px rgba(70,201,50,.4)}
+  .toast{position:fixed;bottom:calc(150px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+    background:var(--card2);border:1px solid var(--green);color:var(--green2);padding:12px 18px;border-radius:14px;
+    font-weight:700;font-size:14px;z-index:60;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <img id="brandLogo" alt="SOBRA NADA APP" style="height:34px">
+      <b>SOBRA <span class="g">NADA</span></b>
+    </div>
+    <div class="lvlchip"><span class="star">★</span> <span id="lvlChip">Nível 1</span></div>
+  </header>
+
+  <!-- DASHBOARD -->
+  <section class="screen active" id="scr-dash">
+    <div id="dHoje" class="lbl" style="margin:0 4px 12px;font-size:13px"></div>
+    <div id="dMascot"></div>
+    <div id="dTama"></div>
+    <div id="dMerreca"></div>
+    <div id="dCarteiras"></div>
+    <div id="dAniv"></div>
+    <div class="cards">
+      <div class="card"><div class="lbl">Receita do mês</div><div class="val pos" id="dMonth">R$ 0</div></div>
+      <div class="card"><div class="lbl">Gasto do mês</div><div class="val neg" id="dSpend">R$ 0</div></div>
+      <div class="card wide"><div class="lbl">💰 Sobra do mês</div>
+        <div class="val pos" id="dSobra">R$ 0</div>
+        <div class="lbl" id="dSobraHint" style="margin-top:4px"></div></div>
+      <div class="card wide">
+        <div class="lbl">Progresso de nível · <span id="dXp">0</span> XP</div>
+        <div class="val" id="dLvl" style="font-size:18px">Nível 1 — Pé-de-meia 🐷</div>
+        <div class="xpbar"><i id="dXpBar" style="width:0%"></i></div>
+      </div>
+    </div>
+
+    <h2 class="sec">💰 Agiota da semana</h2>
+    <div id="dCoach"></div>
+
+    <h2 class="sec">Receitas × Despesas (6 meses)</h2>
+    <div class="chartwrap"><canvas id="chart"></canvas></div>
+
+    <h2 class="sec">Cartões de crédito 💳</h2>
+    <div id="dCartao"></div>
+
+    <h2 class="sec">Empréstimos 🏦</h2>
+    <div id="dEmprestimos"></div>
+
+    <h2 class="sec">Próximos meses</h2>
+    <div id="dForecast"></div>
+
+    <h2 class="sec">Metas em andamento</h2>
+    <div id="dGoals"></div>
+
+    <h2 class="sec">🐖 Cofrinho & Coleção</h2>
+    <div id="dCofre"></div>
+  </section>
+
+  <!-- RECEITAS -->
+  <section class="screen" id="scr-rec">
+    <h2 class="sec">Suas receitas</h2>
+    <div id="recList"></div>
+  </section>
+
+  <!-- GASTOS -->
+  <section class="screen" id="scr-exp">
+    <h2 class="sec">Budgets do mês <span style="text-transform:none;letter-spacing:0;color:var(--muted)">· toque para definir</span></h2>
+    <div id="budgetPanel"></div>
+    <h2 class="sec">Lançamentos</h2>
+    <div id="expList"></div>
+  </section>
+
+  <!-- METAS -->
+  <section class="screen" id="scr-goal">
+    <h2 class="sec">Desafios do mês 🔥</h2>
+    <div id="desafioList"></div>
+    <h2 class="sec">Presentes & aniversários 🎁</h2>
+    <div id="presList"></div>
+    <h2 class="sec">Suas metas</h2>
+    <div id="goalList"></div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section class="screen" id="scr-set">
+    <h2 class="sec">Backup dos dados</h2>
+    <div class="card wide" style="grid-column:auto">
+      <div class="lbl" style="line-height:1.5">Seus dados ficam salvos só neste aparelho. Exporte um backup de vez em quando pra não perder nada.</div>
+      <div class="row2">
+        <button class="btn ghost" onclick="exportData()">⬇️ Exportar</button>
+        <button class="btn ghost" onclick="document.getElementById('imp').click()">⬆️ Importar</button>
+        <input type="file" id="imp" accept="application/json" style="display:none" onchange="importData(this)">
+      </div>
+    </div>
+    <h2 class="sec">Cartões de crédito</h2>
+    <div class="lbl" style="line-height:1.5;margin:0 4px 8px">Nome, limite, fechamento e vencimento de cada cartão. O limite usado é calculado pelas parcelas em aberto.</div>
+    <div id="cardSettings"></div>
+    <button class="btn ghost" onclick="addCartao()">+ Adicionar cartão</button>
+    <h2 class="sec">Conquistas</h2>
+    <div id="achList"></div>
+    <h2 class="sec">Em breve 🔜 <span style="text-transform:none;letter-spacing:0;color:var(--muted)">· próximas ideias</span></h2>
+    <div id="soonList">
+      <div class="item soon"><div class="ic">📥</div><div class="mid"><div class="t">Importar extrato CSV</div><div class="s">Lança seus gastos em lote a partir do CSV do banco/cartão</div></div><span class="soonpill">em breve</span></div>
+      <div class="item soon"><div class="ic">🏅</div><div class="mid"><div class="t">Conquistas sazonais</div><div class="s">Metas de mês específico, tipo "Dezembro no azul"</div></div><span class="soonpill">em breve</span></div>
+      <div class="item soon"><div class="ic">🛒</div><div class="mid"><div class="t">Posso comprar isso?</div><div class="s">Digite um preço e veja o impacto na Merreca e nos seus projetos</div></div><span class="soonpill">em breve</span></div>
+      <div class="item soon"><div class="ic">📊</div><div class="mid"><div class="t">Retrospectiva</div><div class="s">Seu mês/ano em revista: maior gasto, recordes, % poupado</div></div><span class="soonpill">em breve</span></div>
+      <div class="item soon"><div class="ic">🔮</div><div class="mid"><div class="t">Previsão de fim de ano</div><div class="s">"No ritmo atual, em dez você terá R$X guardado"</div></div><span class="soonpill">em breve</span></div>
+      <div class="item soon"><div class="ic">⏰</div><div class="mid"><div class="t">Lembretes de vencimento</div><div class="s">Aviso e badge antes de contas e faturas vencerem</div></div><span class="soonpill">em breve</span></div>
+      <div class="item soon"><div class="ic">🎨</div><div class="mid"><div class="t">Categorias e temas</div><div class="s">Criar/renomear categorias, escolher ícone e temas de cor</div></div><span class="soonpill">em breve</span></div>
+      <div class="item soon"><div class="ic">📤</div><div class="mid"><div class="t">Card compartilhável do mês</div><div class="s">Gera uma imagem bonita do resumo pra mandar pros amigos</div></div><span class="soonpill">em breve</span></div>
+    </div>
+    <h2 class="sec">Zona de perigo</h2>
+    <button class="btn ghost" style="color:var(--bad)" onclick="wipe()">🗑️ Apagar tudo</button>
+    <p style="text-align:center;color:var(--muted);font-size:11px;margin-top:18px">SOBRA NADA APP · v7 · cartões & crédito</p>
+  </section>
+</div>
+
+<button class="fab" id="fab" onclick="openSheet()">+</button>
+
+<nav class="tabs">
+  <button class="on" data-scr="dash" onclick="go('dash',this)"><span class="i">📊</span>Painel</button>
+  <button data-scr="rec" onclick="go('rec',this)"><span class="i">💵</span>Receitas</button>
+  <button data-scr="exp" onclick="go('exp',this)"><span class="i">💸</span>Gastos</button>
+  <button data-scr="goal" onclick="go('goal',this)"><span class="i">🎯</span>Metas</button>
+  <button data-scr="set" onclick="go('set',this)"><span class="i">⚙️</span>Ajustes</button>
+</nav>
+
+<!-- SHEET: nova receita / meta -->
+<div class="sheet" id="sheet">
+  <div class="box">
+    <div class="seg" style="margin-bottom:6px">
+      <button id="tabRec" class="on" onclick="sheetMode('rec')">💵 Receita</button>
+      <button id="tabExp" onclick="sheetMode('exp')">💸 Gasto</button>
+      <button id="tabGoal" onclick="sheetMode('goal')">🎯 Meta</button>
+      <button id="tabDes" onclick="sheetMode('des')">🔥 Desafio</button>
+      <button id="tabPres" onclick="sheetMode('pres')">🎁 Presente</button>
+      <button id="tabEmp" onclick="sheetMode('emp')">🏦 Empréstimo</button>
+    </div>
+
+    <!-- form receita -->
+    <div id="formRec">
+      <h3>Nova receita</h3>
+      <label class="f">Tipo / fonte</label>
+      <select id="recTipo">
+        <option>Salário</option>
+        <option>Ticket Alimentação</option>
+        <option>Ticket Refeição</option>
+        <option>VR (Vale-Refeição)</option>
+        <option>VA (Vale-Alimentação)</option>
+        <option>Bônus</option>
+        <option>PLR</option>
+        <option>Freela</option>
+        <option>Outro</option>
+      </select>
+      <label class="f">Valor (R$)</label>
+      <input id="recVal" type="number" inputmode="decimal" placeholder="0,00">
+      <label class="f">Data / dia de recebimento</label>
+      <input id="recDate" type="date">
+      <label class="chk"><input type="checkbox" id="recRec"> Fonte fixa — recebo todo mês (usa o dia acima)</label>
+      <div class="row2"><button class="btn primary" onclick="addReceita()">Salvar receita</button></div>
+    </div>
+
+    <!-- form gasto -->
+    <div id="formExp" style="display:none">
+      <h3>Novo gasto</h3>
+      <label class="f">Categoria</label>
+      <select id="expCat"></select>
+      <label class="f">Valor (R$)</label>
+      <input id="expVal" type="number" inputmode="decimal" placeholder="0,00">
+      <label class="f">Data</label>
+      <input id="expDate" type="date">
+      <label class="f">Descrição (opcional)</label>
+      <input id="expDesc" placeholder="Ex.: mercado do mês">
+      <label class="f">Parcelar em quantas vezes?</label>
+      <input id="expParc" type="number" inputmode="numeric" min="1" value="1" oninput="updateParcHint()">
+      <div class="lbl" id="parcHintTxt" style="margin:6px 2px 0;color:var(--muted)"></div>
+      <label class="f">Cartão (opcional)</label>
+      <select id="expCart"></select>
+      <label class="chk"><input type="checkbox" id="expFixo"> Gasto fixo (repete todo mês)</label>
+      <div class="row2"><button class="btn primary" onclick="addDespesa()">Salvar gasto</button></div>
+    </div>
+
+    <!-- form meta -->
+    <div id="formGoal" style="display:none">
+      <h3>Nova meta / projeto</h3>
+      <label class="f">Nome</label>
+      <input id="goalName" placeholder="Ex.: Reserva, trocar de carro, aliança">
+      <label class="f">Valor alvo / custo estimado (R$)</label>
+      <input id="goalTarget" type="number" inputmode="decimal" placeholder="0,00" oninput="updateGoalHint()">
+      <label class="f">Prazo (opcional)</label>
+      <input id="goalDeadline" type="date" oninput="updateGoalHint()">
+      <label class="f">Guardar por mês — vira projeto de longo prazo (opcional)</label>
+      <input id="goalAporte" type="number" inputmode="decimal" placeholder="0,00" oninput="updateGoalHint()">
+      <div class="lbl" id="goalHint" style="margin:6px 2px 0;color:var(--muted)"></div>
+      <div class="row2"><button class="btn primary" onclick="addGoal()">Criar</button></div>
+    </div>
+
+    <!-- form desafio -->
+    <div id="formDes" style="display:none">
+      <h3>Novo desafio do mês 🔥</h3>
+      <label class="f">Tipo de desafio</label>
+      <select id="desTipo" onchange="desToggle()">
+        <option value="categoria">Segurar uma categoria abaixo de…</option>
+        <option value="sobra">Fechar o mês com sobra acima de…</option>
+      </select>
+      <div id="desCatWrap">
+        <label class="f">Categoria</label>
+        <select id="desCat"></select>
+      </div>
+      <label class="f" id="desValLbl">Limite da categoria (R$)</label>
+      <input id="desVal" type="number" inputmode="decimal" placeholder="0,00">
+      <div class="lbl" style="margin:8px 2px 0;color:var(--muted)">Vale para o mês atual. Vencendo, rende 60 XP e um troféu. 🏆</div>
+      <div class="row2"><button class="btn primary" onclick="addDesafio()">Topar desafio</button></div>
+    </div>
+
+    <!-- form presente -->
+    <div id="formPres" style="display:none">
+      <h3>Novo presente 🎁</h3>
+      <label class="f">Pra quem?</label>
+      <input id="presPessoa" placeholder="Ex.: Namorada, Mãe, João">
+      <label class="f">Data do aniversário</label>
+      <input id="presData" type="date">
+      <label class="f">Budget do presente (R$)</label>
+      <input id="presBudget" type="number" inputmode="decimal" placeholder="0,00">
+      <label class="f">Ideia de presente (opcional)</label>
+      <input id="presIdeia" placeholder="Ex.: perfume, fone, jantar">
+      <div class="lbl" style="margin:8px 2px 0;color:var(--muted)">O budget é reservado no mês do aniversário (pesa na sobra/Merreca). Repete todo ano. 🔁</div>
+      <div class="row2"><button class="btn primary" onclick="addPresente()">Planejar presente</button></div>
+    </div>
+
+    <!-- form empréstimo -->
+    <div id="formEmp" style="display:none">
+      <h3>Novo empréstimo 🏦</h3>
+      <label class="f">Nome</label>
+      <input id="empNome" placeholder="Ex.: Empréstimo do carro">
+      <label class="f">Modalidade</label>
+      <select id="empModal" onchange="updateEmpHint()"></select>
+      <label class="f">Valor emprestado (R$)</label>
+      <input id="empPrincipal" type="number" inputmode="decimal" placeholder="0,00" oninput="updateEmpHint()">
+      <label class="f">Valor da parcela (R$)</label>
+      <input id="empParcela" type="number" inputmode="decimal" placeholder="0,00" oninput="updateEmpHint()">
+      <label class="f">Número de parcelas</label>
+      <input id="empN" type="number" inputmode="numeric" min="1" placeholder="ex.: 24" oninput="updateEmpHint()">
+      <label class="f">Data da 1ª parcela</label>
+      <input id="empData" type="date">
+      <div class="lbl" id="empHint" style="margin:8px 2px 0;color:var(--muted);line-height:1.5"></div>
+      <div class="lbl" style="margin:6px 2px 0;color:var(--muted)">A parcela pesa na sua sobra/Merreca e na previsão dos próximos meses.</div>
+      <div class="row2"><button class="btn primary" onclick="addEmprestimo()">Salvar empréstimo</button></div>
+    </div>
+
+    <div class="row2"><button class="btn ghost" onclick="closeSheet()">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- SHEET: fechar o dia (tamagotchi) -->
+<div class="sheet" id="fecharSheet">
+  <div class="box">
+    <h3>Fechar o dia 🐷</h3>
+    <div class="lbl" style="margin:6px 0 4px;line-height:1.6" id="fdResumo"></div>
+    <label class="chk"><input type="checkbox" id="fdLancou"> Já lancei todos os gastos de hoje</label>
+    <div class="row2"><button class="btn primary" onclick="fecharDia()">Fechar o dia do QUASE NADA</button></div>
+    <div class="row2"><button class="btn ghost" onclick="closeFecharSheet();openSheet();sheetMode('exp')">Lançar um gasto antes</button></div>
+    <div class="row2"><button class="btn ghost" onclick="closeFecharSheet()">Agora não</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- DADOS ---------- */
+const KEY='sobraNadaData', SCHEMA=7;
+const XP={receita:10,despesa:6,metaCriada:15,aporte:8,metaConcluida:80,budget:5,parcela:12,fixo:12};
+const LEVELS=['Pé-de-meia 🐷','Poupador 🪙','Investidor 📈','Estrategista 🧠','Magnata 💰','Tubarão das Finanças 🦈','Lobo de Wall-Street 🐺','Barão do Bitcoin ₿','Rei do Cofre 👑','Lenda Verde 🐉'];
+// níveis NEGATIVOS (quando o mês fecha no vermelho) — índice 0 = -1 ... 4 = -5
+const NEG_LEVELS=[
+  {n:'TÁ DURO DORME!',e:'😴'},{n:'Devendo',e:'😡'},{n:'Cheque Especial',e:'🤬'},
+  {n:'Nome Sujo',e:'💀'},{n:'Buraco Negro',e:'☠️'}
+];
+const CATS=[
+  {id:'Moradia',ic:'🏠'},{id:'Alimentação',ic:'🍔'},{id:'Transporte',ic:'🚗'},
+  {id:'Contas',ic:'🧾'},{id:'Lazer',ic:'🎮'},{id:'Saúde',ic:'💊'},
+  {id:'Compras',ic:'🛍️'},{id:'Outro',ic:'📦'}
+];
+const catIc=c=>(CATS.find(x=>x.id===c)||{}).ic||'📦';
+
+/* SVGs embutidos (app autossuficiente, não depende de arquivos externos) */
+const MASCOTE_SVG=`<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" aria-label="Mascote">
+<defs><radialGradient id="bodyGrad" cx="42%" cy="35%" r="75%"><stop offset="0%" stop-color="#7DE85B"/><stop offset="55%" stop-color="#46C932"/><stop offset="100%" stop-color="#2E9E22"/></radialGradient>
+<linearGradient id="snoutGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5FD945"/><stop offset="100%" stop-color="#37A82A"/></linearGradient>
+<radialGradient id="cheek" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#9BF07E" stop-opacity="0.9"/><stop offset="100%" stop-color="#9BF07E" stop-opacity="0"/></radialGradient>
+<filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#0c3d08" flood-opacity="0.35"/></filter></defs>
+<ellipse cx="256" cy="470" rx="150" ry="26" fill="#0c3d08" opacity="0.25"/>
+<g filter="url(#soft)">
+<path d="M150 120 C120 70 95 60 92 95 C90 125 120 150 158 158 Z" fill="#39B02B"/>
+<path d="M362 120 C392 70 417 60 420 95 C422 125 392 150 354 158 Z" fill="#39B02B"/>
+<path d="M150 122 C128 86 112 80 110 102 C109 122 130 140 156 146 Z" fill="#2C8C20"/>
+<path d="M362 122 C384 86 400 80 402 102 C403 122 382 140 356 146 Z" fill="#2C8C20"/>
+<path d="M256 92 C372 92 446 168 446 280 C446 392 366 446 256 446 C146 446 66 392 66 280 C66 168 140 92 256 92 Z" fill="url(#bodyGrad)"/>
+<ellipse cx="150" cy="300" rx="46" ry="34" fill="url(#cheek)"/><ellipse cx="362" cy="300" rx="46" ry="34" fill="url(#cheek)"/>
+<path d="M150 196 L242 234 L236 252 L146 218 Z" fill="#16520f"/><path d="M362 196 L270 234 L276 252 L366 218 Z" fill="#16520f"/>
+<g><ellipse cx="198" cy="258" rx="34" ry="30" fill="#ffffff"/><ellipse cx="314" cy="258" rx="34" ry="30" fill="#ffffff"/>
+<path d="M164 250 Q198 232 232 250 L232 240 Q198 224 164 240 Z" fill="#1f6e16"/><path d="M280 250 Q314 232 348 250 L348 240 Q314 224 280 240 Z" fill="#1f6e16"/>
+<circle cx="206" cy="266" r="13" fill="#10310c"/><circle cx="306" cy="266" r="13" fill="#10310c"/>
+<circle cx="210" cy="262" r="4" fill="#ffffff"/><circle cx="310" cy="262" r="4" fill="#ffffff"/></g>
+<ellipse cx="256" cy="330" rx="74" ry="52" fill="url(#snoutGrad)" stroke="#2C8C20" stroke-width="4"/>
+<ellipse cx="230" cy="332" rx="15" ry="22" fill="#16520f"/><ellipse cx="282" cy="332" rx="15" ry="22" fill="#16520f"/>
+<path d="M196 392 Q256 366 316 392" fill="none" stroke="#16520f" stroke-width="9" stroke-linecap="round"/>
+<path d="M120 388 Q170 360 235 392 Q175 410 120 408 Z" fill="#3CB52E"/><path d="M392 388 Q342 360 277 392 Q337 410 392 408 Z" fill="#3CB52E"/>
+<path d="M96 150 q-14 -6 -6 -20 q-14 4 -14 -10" fill="none" stroke="#8AE96B" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+<path d="M420 150 q14 -6 6 -20 q14 4 14 -10" fill="none" stroke="#8AE96B" stroke-width="6" stroke-linecap="round" opacity="0.8"/></g></svg>`;
+const LOGO_SVG=`<svg viewBox="0 0 720 360" xmlns="http://www.w3.org/2000/svg" aria-label="SOBRA NADA APP">
+<defs><linearGradient id="ink" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7DE85B"/><stop offset="100%" stop-color="#34A827"/></linearGradient>
+<style>.word{font-family:"Arial Black",Helvetica,sans-serif;font-weight:900;font-style:italic;letter-spacing:-3px}</style></defs>
+<g fill="#2C8C20"><path d="M150 168 q6 30 0 52 q-8 14 -14 0 q-5 -18 0 -52 Z"/><path d="M470 168 q5 40 0 64 q-7 14 -12 0 q-5 -22 0 -64 Z"/><circle cx="143" cy="226" r="8"/><circle cx="464" cy="238" r="8"/></g>
+<g fill="#2C8C20"><path d="M250 300 q6 26 0 44 q-8 12 -13 0 q-5 -16 0 -44 Z"/><circle cx="243" cy="348" r="7"/></g>
+<text x="60" y="160" class="word" font-size="120" fill="url(#ink)" stroke="#16520f" stroke-width="9" paint-order="stroke" stroke-linejoin="round">SOBRA</text>
+<text x="60" y="160" class="word" font-size="120" fill="#A9F58E" opacity="0.25">SOBRA</text>
+<text x="100" y="290" class="word" font-size="120" fill="url(#ink)" stroke="#16520f" stroke-width="9" paint-order="stroke" stroke-linejoin="round">NADA</text>
+<text x="100" y="290" class="word" font-size="120" fill="#A9F58E" opacity="0.25">NADA</text>
+<g transform="rotate(-6 600 250)"><rect x="540" y="222" width="118" height="54" rx="10" fill="#16520f"/>
+<text x="599" y="262" text-anchor="middle" font-family="Arial Black,sans-serif" font-weight="900" font-style="italic" font-size="40" fill="#7DE85B" letter-spacing="2">APP</text></g></svg>`;
+const MASCOTE_URI='data:image/svg+xml;charset=utf8,'+encodeURIComponent(MASCOTE_SVG);
+const LOGO_URI='data:image/svg+xml;charset=utf8,'+encodeURIComponent(LOGO_SVG);
+let db=load();
+
+function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){const d=JSON.parse(raw); return migrate(d);}
+  }catch(e){console.warn('load fail',e);}
+  return {receitas:[],despesas:[],compras:[],recorrencias:[],fontesRenda:[],cartao:{},cartoes:[],emprestimos:[],desafios:[],presentes:[],budgets:{},metas:[],tamagotchi:{ultimoFechamento:null,sequencia:0,recorde:0,totalFechamentos:0,ultimoResultado:null,fase:0,colecao:[]},gamificacao:{xp:0,conquistas:[]},config:{moeda:'R$',versaoSchema:SCHEMA}};
+}
+function migrate(d){
+  d.receitas=d.receitas||[]; d.despesas=d.despesas||[]; d.budgets=d.budgets||{}; d.metas=d.metas||[];
+  d.compras=d.compras||[]; d.recorrencias=d.recorrencias||[]; d.fontesRenda=d.fontesRenda||[]; d.cartao=d.cartao||{}; d.desafios=d.desafios||[]; d.presentes=d.presentes||[];
+  d.cartoes=d.cartoes||[]; d.emprestimos=d.emprestimos||[];
+  // migra cartão único antigo → lista de cartões
+  if(!d.cartoes.length && (d.cartao.fechamento||d.cartao.vencimento))
+    d.cartoes.push({id:uid(),nome:'Meu cartão',fechamento:d.cartao.fechamento||null,vencimento:d.cartao.vencimento||null,limite:null});
+  d.metas.forEach(m=>{if(m.aporteMensal==null)m.aporteMensal=0;});
+  d.tamagotchi=d.tamagotchi||{ultimoFechamento:null,sequencia:0,recorde:0,totalFechamentos:0,ultimoResultado:null};
+  if(d.tamagotchi.fase==null)d.tamagotchi.fase=0;
+  if(!d.tamagotchi.colecao)d.tamagotchi.colecao=[];
+  d.gamificacao=d.gamificacao||{xp:0,conquistas:[]};
+  d.gamificacao.conquistas=d.gamificacao.conquistas||[];
+  if(d.gamificacao.streak==null)d.gamificacao.streak=0;
+  if(d.gamificacao.ultimoDia==null)d.gamificacao.ultimoDia=null;
+  d.config=d.config||{moeda:'R$'}; d.config.versaoSchema=SCHEMA;
+  return d;
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/* ---------- HELPERS ---------- */
+const brl=n=>'R$ '+(Number(n)||0).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:2});
+const monthKey=d=>d.slice(0,7);
+const thisMonth=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
+function addMonths(ym,k){let[y,m]=ym.split('-').map(Number);m=m-1+k;y+=Math.floor(m/12);m=((m%12)+12)%12;return y+'-'+String(m+1).padStart(2,'0');}
+function monthsBetween(a,b){const[ya,ma]=a.split('-').map(Number),[yb,mb]=b.split('-').map(Number);return (yb-ya)*12+(mb-ma);}
+function mesNome(ym){const[y,m]=ym.split('-');return new Date(y,m-1,1).toLocaleDateString('pt-BR',{month:'short',year:'2-digit'});}
+
+/* --- Motor de Tempo: parcelas e recorrências --- */
+// Qual parcela (1..N) de uma compra cai no mês ym; null se não cai.
+function parcelaNoMes(c,ym){const diff=monthsBetween(monthKey(c.dataInicio),ym);return (diff>=0&&diff<c.parcelas)?{num:diff+1,valor:c.valorParcela}:null;}
+// Lista de gastos efetivos do mês (avulsos + parcelas + recorrências de despesa).
+function despesasNoMes(ym){
+  const out=[];
+  db.despesas.filter(d=>monthKey(d.data)===ym).forEach(d=>out.push({categoria:d.categoria,valor:d.valor}));
+  db.compras.forEach(c=>{const p=parcelaNoMes(c,ym);if(p)out.push({categoria:c.categoria,valor:p.valor});});
+  db.recorrencias.filter(r=>r.tipo==='despesa'&&r.ativo&&ym>=r.inicio).forEach(r=>out.push({categoria:r.categoria,valor:r.valor}));
+  // Fase 5: reserva do presente — pesa no mês do próximo aniversário (enquanto não comprado)
+  db.presentes.forEach(p=>{const v=Number(p.budget)||0;if(v<=0)return;const occ=proxAniversario(p);if(occ&&ymDate(occ)===ym)out.push({categoria:'Compras',valor:v,presente:true});});
+  // Fase 6: compromisso mensal de projetos (metas com aporteMensal) — mês atual e futuros, até concluir
+  if(ym>=thisMonth())db.metas.forEach(m=>{const a=Number(m.aporteMensal)||0;if(a>0&&!m.concluida)out.push({categoria:'Projetos',valor:a,projeto:true});});
+  // Cartões & crédito: parcela do empréstimo no mês (dentro da janela de parcelas)
+  db.emprestimos.forEach(e=>{const n=Number(e.nParcelas)||0,d=monthsBetween(monthKey(e.dataInicio),ym);if(d>=0&&d<n)out.push({categoria:'Empréstimo',valor:Number(e.parcela)||0,emprestimo:true});});
+  return out;
+}
+function totalDespesasMes(ym){return despesasNoMes(ym).reduce((s,x)=>s+x.valor,0);}
+function totalReceitasMes(ym){
+  let s=db.receitas.filter(r=>monthKey(r.data)===ym).reduce((a,r)=>a+r.valor,0);
+  s+=db.recorrencias.filter(r=>r.tipo==='receita'&&r.ativo&&ym>=r.inicio).reduce((a,r)=>a+r.valor,0);
+  return s;
+}
+// dias do mês corrente
+function diasMes(){const n=new Date();const last=new Date(n.getFullYear(),n.getMonth()+1,0).getDate();return {dia:n.getDate(),total:last,faltam:Math.max(0,last-n.getDate())};}
+// próxima ocorrência de um dia do mês (a partir de hoje)
+function proxDia(dia){const n=new Date();const hoje=new Date(n.getFullYear(),n.getMonth(),n.getDate());let t=new Date(n.getFullYear(),n.getMonth(),dia);if(t<hoje)t=new Date(n.getFullYear(),n.getMonth()+1,dia);return t;}
+function fmtCurta(dt){return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});}
+// fatura estimada = soma das parcelas em aberto no mês corrente
+function faturaEstimada(){return db.compras.reduce((s,c)=>{const p=parcelaNoMes(c,thisMonth());return s+(p?p.valor:0);},0);}
+
+/* --- Cartões & crédito: limite utilizado e fatura por cartão --- */
+function cartaoById(id){return db.cartoes.find(c=>c.id===id);}
+// parcelas ainda em aberto (mês atual em diante) de uma compra
+function parcelasEmAberto(c){const pagas=Math.min(c.parcelas,Math.max(0,monthsBetween(monthKey(c.dataInicio),thisMonth())));return Math.max(0,c.parcelas-pagas);}
+// limite usado = soma das parcelas em aberto das compras do cartão
+function cartaoUsado(id){return db.compras.filter(c=>c.cartaoId===id).reduce((s,c)=>s+parcelasEmAberto(c)*c.valorParcela,0);}
+// fatura do mês = parcelas do cartão que caem no mês corrente
+function faturaCartao(id){return db.compras.filter(c=>c.cartaoId===id).reduce((s,c)=>{const p=parcelaNoMes(c,thisMonth());return s+(p?p.valor:0);},0);}
+function addCartao(){db.cartoes.push({id:uid(),nome:'Cartão '+(db.cartoes.length+1),fechamento:null,vencimento:null,limite:null});save();renderAll();}
+function delCartao(id){db.cartoes=db.cartoes.filter(c=>c.id!==id);db.compras.forEach(c=>{if(c.cartaoId===id)c.cartaoId=null;});save();renderAll();}
+function setCartaoCampo(id,campo,val){const c=cartaoById(id);if(!c)return;
+  if(campo==='nome')c.nome=(val.trim()||c.nome);
+  else if(campo==='limite')c.limite=parseFloat(val)||null;
+  else{const n=parseInt(val)||0;c[campo]=(n>0&&n<=31)?n:null;}
+  save();renderAll();}
+
+/* --- Empréstimos: referência de juros (mercado BR) + análise --- */
+// % ao mês — referência aprox. (BACEN, jun/2026). Editável no código.
+const REF_JUROS=[
+  {id:'consignado',nome:'Consignado',ref:2.0},
+  {id:'pessoal',nome:'Crédito pessoal',ref:8.5},
+  {id:'financiamento',nome:'Financiamento (veículo/imóvel)',ref:2.2},
+  {id:'cheque',nome:'Cheque especial',ref:8.0},
+  {id:'cartao',nome:'Cartão (rotativo/parcelado)',ref:14.4},
+  {id:'outro',nome:'Outro',ref:6.0}
+];
+function refJuros(id){return REF_JUROS.find(r=>r.id===id)||REF_JUROS[REF_JUROS.length-1];}
+// taxa mensal implícita (resolve P = PMT·(1-(1+r)^-n)/r por bisseção)
+function taxaImplicita(P,PMT,n){
+  if(!(P>0&&PMT>0&&n>0))return 0;
+  if(PMT*n<=P)return 0; // sem juros
+  let lo=1e-6, hi=2; const f=r=>PMT*(1-Math.pow(1+r,-n))/r - P;
+  for(let i=0;i<100;i++){const mid=(lo+hi)/2, v=f(mid); if(Math.abs(v)<0.01)return mid; if(v>0)lo=mid; else hi=mid;}
+  return (lo+hi)/2;
+}
+function emprestimoAnalise(e){
+  const P=Number(e.principal)||0, PMT=Number(e.parcela)||0, n=Number(e.nParcelas)||0;
+  const r = (e.taxaMes!=null) ? e.taxaMes/100 : taxaImplicita(P,PMT,n);
+  const taxaMes=r*100, totalPago=PMT*n, totalJuros=Math.max(0,totalPago-P);
+  const ref=refJuros(e.modalidade);
+  let veredito,cor;
+  if(taxaMes<=ref.ref){veredito='Bom — abaixo do mercado';cor='var(--green2)';}
+  else if(taxaMes<=ref.ref*1.3){veredito='Justo — na média';cor='var(--gold)';}
+  else if(taxaMes<=ref.ref*1.8){veredito='Caro — acima do mercado';cor='#ff9d4f';}
+  else{veredito='Abusivo! Bem acima do mercado';cor='var(--bad)';}
+  const renda=totalReceitasMes(thisMonth());
+  return {taxaMes,totalPago,totalJuros,ref,veredito,cor,peso:renda>0?PMT/renda*100:null,P,PMT,n};
+}
+function addEmprestimo(){
+  const g=id=>document.getElementById(id).value;
+  const nome=g('empNome').trim(), principal=parseFloat(g('empPrincipal'))||0;
+  const parcela=parseFloat(g('empParcela'))||0, nParcelas=parseInt(g('empN'))||0;
+  const modalidade=g('empModal'), dataInicio=g('empData');
+  if(!nome)return toast('⚠️ Dê um nome ao empréstimo');
+  if(!(principal>0&&parcela>0&&nParcelas>0))return toast('⚠️ Preencha valor, parcela e nº de parcelas');
+  if(!dataInicio)return toast('⚠️ Escolha a data de início');
+  db.emprestimos.push({id:uid(),nome,principal,parcela,nParcelas,modalidade,dataInicio,taxaMes:null});
+  registrarCheckin(); checkAchievements(); save(); closeSheet(); renderAll();
+  toast('🏦 Empréstimo cadastrado');
+}
+function delEmprestimo(id){db.emprestimos=db.emprestimos.filter(e=>e.id!==id);save();renderAll();}
+function updateEmpHint(){
+  const g=id=>document.getElementById(id).value;
+  const P=parseFloat(g('empPrincipal'))||0,PMT=parseFloat(g('empParcela'))||0,n=parseInt(g('empN'))||0;
+  const el=document.getElementById('empHint');
+  if(P>0&&PMT>0&&n>0){const a=emprestimoAnalise({principal:P,parcela:PMT,nParcelas:n,modalidade:g('empModal')});
+    el.innerHTML=`Taxa ~<b>${a.taxaMes.toFixed(2)}% a.m.</b> · juros total ${brl(a.totalJuros)} · <b style="color:${a.cor}">${a.veredito}</b>`;}
+  else el.textContent='';
+}
+
+/* --- Fase 4: Merreca, humor do mascote, streaks --- */
+function ontemStr(){const d=new Date();d.setDate(d.getDate()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+// Merreca = sobra do mês dividida pelos dias que faltam
+function merreca(){
+  const ym=thisMonth(), sobra=sobraLivreMes(ym);
+  const dm=diasMes(), diasRest=dm.total-dm.dia+1;
+  const dia=sobra>0?sobra/diasRest:0;
+  return {dia, semana:dia*Math.min(7,diasRest), sobra, diasRest};
+}
+// meses consecutivos no azul (de trás pra frente a partir de hoje)
+function mesesNoAzul(){let n=0;for(let i=0;i<24;i++){const ym=addMonths(thisMonth(),-i);const r=totalReceitasMes(ym),g=totalDespesasMes(ym);if(r>0&&(r-g)>0)n++;else break;}return n;}
+// humor do porquinho conforme saúde financeira do mês
+function humorMascote(){
+  const ym=thisMonth(), r=totalReceitasMes(ym), g=totalDespesasMes(ym), s=r-g;
+  if(r===0&&g===0)return{key:'neutro',emoji:'🐷',fala:'Bora começar! Lança suas receitas e gastos.'};
+  if(s<0)return{key:'bravo',emoji:'😡',fala:'Tá gastando mais do que ganha! Segura essa Merreca.'};
+  const pct=r>0?s/r:0;
+  if(pct<0.1)return{key:'ok',emoji:'😐',fala:'No limite. Dá pra apertar um pouquinho.'};
+  if(pct<0.25)return{key:'feliz',emoji:'🙂',fala:'Tá indo bem, mantém o ritmo!'};
+  return{key:'gordo',emoji:'😎',fala:'Tá sobrando uma boa! Orgulho do meu dono.'};
+}
+// meses consecutivos NO VERMELHO (a partir de hoje pra trás)
+function mesesNoVermelho(){let n=0;for(let i=0;i<24;i++){const ym=addMonths(thisMonth(),-i);const r=totalReceitasMes(ym),g=totalDespesasMes(ym);if((r-g)<0)n++;else break;}return n;}
+// nível negativo: null se não tá no vermelho; senão {n:1..5, nome, emoji, meses, deficit}
+function nivelVermelho(){
+  const ym=thisMonth(), r=totalReceitasMes(ym), g=totalDespesasMes(ym), s=r-g;
+  if(s>=0)return null;
+  const pct = r>0 ? s/r : -1;          // sem receita e gastando = fundo do poço
+  let i = pct>=-0.05?0 : pct>=-0.20?1 : pct>=-0.40?2 : pct>=-0.75?3 : 4;
+  const meses=mesesNoVermelho();
+  i=Math.min(4, i + Math.max(0, meses-1)); // cada mês seguido no vermelho afunda mais
+  return {n:i+1, nome:NEG_LEVELS[i].n, emoji:NEG_LEVELS[i].e, meses, deficit:-s};
+}
+// bronca/zoeira do porquinho conforme a gravidade (esculhamba o GASTO, sempre puxando reação)
+// pérolas rabugentas do porquinho — podem sair num vermelho leve E às vezes no azul
+const RABUGICE=[
+  'TÁ DURO? DORME! 😴',
+  'Amanhã a gente liga pro agiota e resolve. 📞',
+  'Sem grana, sem rolê. Apaga a luz e dorme, campeão. 💤',
+  'Conta zerada. O melhor investimento de hoje é a cama. 🛏️',
+  'Pão e água, esquece sucrilhos. 🍞'
+];
+// broncas pesadas (níveis fundos -3, -4, -5)
+const XING_PESADO=[
+  ['Parabéns, alimentou o banco com juros! 🤬','Cheque especial não é renda extra, criatura!','Tá torrando o que nem tem. ACORDA!'],
+  ['Caminhando direto pro SPC, campeão. 💀','Virou terra arrasada. Para TUDO agora.','Teu porquinho tá com vergonha de você. 😤'],
+  ['FALÊNCIA À VISTA. Larga o cartão AGORA! ☠️','Buraco negro: nem a luz escapa do teu débito.','Corta gasto YA, antes que eu fuja de casa! 🐷💨']
+];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+// fala da bronca: vermelho leve (-1/-2) puxa as pérolas; fundo (-3+) puxa bronca pesada
+function falaBronca(n){return n>=3 ? pick(XING_PESADO[Math.min(2,n-3)]) : pick(RABUGICE);}
+// seed estável por dia (pra rabugice no azul não trocar a cada toque)
+function diaSeed(){const d=new Date();return d.getFullYear()*372+d.getMonth()*31+d.getDate();}
+
+/* --- Fase 9a: QUASE NADA tamagotchi (cuidado diário) --- */
+function diasEntreDatas(a,b){const[ay,am,ad]=a.split('-').map(Number),[by,bm,bd]=b.split('-').map(Number);return Math.round((Date.UTC(by,bm-1,bd)-Date.UTC(ay,am-1,ad))/86400000);}
+function tamaDiasDesde(){const u=db.tamagotchi.ultimoFechamento;return u?diasEntreDatas(u,todayStr()):999;}
+function fechouHoje(){return db.tamagotchi.ultimoFechamento===todayStr();}
+// energia: cheia no dia que fecha, decai ~25%/dia parado
+function tamaEnergia(){const d=tamaDiasDesde();return d<=0?100:Math.max(0,100-d*25);}
+// gasto avulso de hoje (o que dá pra "fechar" no dia)
+function gastoHoje(){return db.despesas.filter(x=>x.data===todayStr()).reduce((s,x)=>s+x.valor,0);}
+function dentroDaMerrecaHoje(){return gastoHoje()<=(merreca().dia||0)+0.001;}
+function fecharDia(){
+  const t=db.tamagotchi, hoje=todayStr();
+  if(t.ultimoFechamento===hoje){toast('Já fechou o dia! 🐷');return;}
+  if(!document.getElementById('fdLancou').checked)return toast('Confirma que lançou tudo de hoje 🐷');
+  t.sequencia = (t.ultimoFechamento===ontemStr()) ? (t.sequencia||0)+1 : 1;
+  t.recorde = Math.max(t.recorde||0, t.sequencia);
+  t.ultimoFechamento = hoje; t.totalFechamentos=(t.totalFechamentos||0)+1;
+  const dentro=dentroDaMerrecaHoje();
+  t.ultimoResultado = dentro?'dentro':'estourou';
+  registrarCheckin();
+  gainXp(dentro?8:3, dentro?'fechou no azul':'fechou o dia');
+  checkAchievements(); save(); closeFecharSheet(); renderAll();
+  toast(dentro ? '😎 QUASE NADA jantou bem! Sequência '+t.sequencia : '🤢 Comeu besteira… mas fechou. Sequência '+t.sequencia);
+}
+/* --- Desafios (boss battles) --- */
+function desafioLabel(d){return d.tipo==='categoria'?`${catIc(d.categoria)} ${d.categoria} abaixo de ${brl(d.limite)}`:`Sobrar pelo menos ${brl(d.limite)}`;}
+function desafioStatus(d){ // {gasto/valor atual, alvo, pct, estourou}
+  if(d.tipo==='categoria'){const at=spentInCat(d.categoria,d.mes);return {atual:at,alvo:d.limite,pct:Math.min(100,Math.round(at/d.limite*100)),falhou:at>d.limite};}
+  const s=totalReceitasMes(d.mes)-totalDespesasMes(d.mes);return {atual:Math.max(0,s),alvo:d.limite,pct:Math.min(100,Math.round(Math.max(0,s)/d.limite*100)),falhou:false};
+}
+// resolve desafios de meses já encerrados (premia vitória uma vez)
+function resolveDesafios(){
+  let changed=false;
+  db.desafios.forEach(d=>{
+    if(d.resolvido||d.mes>=thisMonth())return;
+    const ok = d.tipo==='categoria' ? spentInCat(d.categoria,d.mes)<=d.limite
+             : (totalReceitasMes(d.mes)-totalDespesasMes(d.mes))>=d.limite;
+    d.resolvido=true; d.vitoria=ok; changed=true;
+    if(ok){db.gamificacao.xp+=d.xp;const id='boss_'+d.id;
+      if(!db.gamificacao.conquistas.find(c=>c.id===id))db.gamificacao.conquistas.push({id,label:'🏆 Desafio vencido: '+desafioLabel(d),date:todayStr()});}
+  });
+  if(changed)save();
+}
+function addDesafio(){
+  const tipo=document.getElementById('desTipo').value;
+  const limite=parseFloat(document.getElementById('desVal').value);
+  if(!limite||limite<=0)return toast('⚠️ Informe um valor');
+  const d={id:uid(),tipo,limite,mes:thisMonth(),xp:60,resolvido:false,vitoria:null};
+  if(tipo==='categoria')d.categoria=document.getElementById('desCat').value;
+  db.desafios.push(d);
+  registrarCheckin(); save(); closeSheet(); renderAll();
+}
+function delDesafio(id){db.desafios=db.desafios.filter(d=>d.id!==id);save();renderAll();}
+
+/* --- Fase 5: Presentes & aniversários --- */
+const ymDate=dt=>dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');
+// próximo aniversário (Date) ainda NÃO comprado; pula o ano já presenteado e recorre todo ano
+function proxAniversario(p){
+  if(!p.dataAniversario)return null;
+  const[,M,D]=p.dataAniversario.split('-').map(Number);
+  const n=new Date(), hoje=new Date(n.getFullYear(),n.getMonth(),n.getDate());
+  let ano=n.getFullYear(), occ=new Date(ano,M-1,D);
+  if(occ<hoje){ano++;occ=new Date(ano,M-1,D);}
+  if(p.compradoAno===ano){ano++;occ=new Date(ano,M-1,D);}
+  return occ;
+}
+function diasAteAniv(p){const occ=proxAniversario(p);if(!occ)return null;const n=new Date(),hoje=new Date(n.getFullYear(),n.getMonth(),n.getDate());return Math.round((occ-hoje)/86400000);}
+// aniversário mais próximo IGNORANDO compra (pra saber se o ciclo atual já foi presenteado)
+function aniversarioImediato(p){
+  const[,M,D]=p.dataAniversario.split('-').map(Number);
+  const n=new Date(),hoje=new Date(n.getFullYear(),n.getMonth(),n.getDate());
+  let ano=n.getFullYear(),occ=new Date(ano,M-1,D);
+  if(occ<hoje){ano++;occ=new Date(ano,M-1,D);}
+  return {ano,occ};
+}
+function presenteCompradoCiclo(p){return p.compradoAno!=null&&p.compradoAno===aniversarioImediato(p).ano;}
+function addPresente(){
+  const pessoa=document.getElementById('presPessoa').value.trim();
+  const data=document.getElementById('presData').value;
+  const budget=parseFloat(document.getElementById('presBudget').value)||0;
+  const ideia=document.getElementById('presIdeia').value.trim();
+  if(!pessoa)return toast('⚠️ Diga de quem é o aniversário');
+  if(!data)return toast('⚠️ Escolha a data do aniversário');
+  db.presentes.push({id:uid(),pessoa,dataAniversario:data,budget,ideia,compradoAno:null});
+  registrarCheckin(); checkAchievements(); save(); closeSheet(); renderAll();
+  toast('🎁 Presente planejado!');
+}
+function delPresente(id){db.presentes=db.presentes.filter(p=>p.id!==id);save();renderAll();}
+
+/* --- Fase 6: Projetos de longo prazo (metas com aporte mensal) --- */
+function mesesAtePrazo(prazo){if(!prazo)return null;return Math.max(1,monthsBetween(thisMonth(),monthKey(prazo)));}
+function projetoStatus(m){
+  const restante=Math.max(0,(m.alvo||0)-(m.atual||0));
+  const ap=Number(m.aporteMensal)||0;
+  const mesesRitmo = ap>0&&restante>0 ? Math.ceil(restante/ap) : 0;
+  const etaYm = mesesRitmo>0 ? addMonths(thisMonth(),mesesRitmo-1) : null;
+  const mesesPrazo = mesesAtePrazo(m.prazo);
+  const aporteNecessario = (mesesPrazo!=null&&restante>0) ? Math.ceil(restante/mesesPrazo) : 0;
+  const atrasado = (mesesPrazo!=null && restante>0 && aporteNecessario>ap);
+  return {restante,ap,mesesRitmo,etaYm,mesesPrazo,aporteNecessario,atrasado};
+}
+// total reservado por mês para projetos ativos
+function compromissoProjetos(ym){if(ym<thisMonth())return 0;return db.metas.reduce((s,m)=>{const a=Number(m.aporteMensal)||0;return s+((a>0&&!m.concluida)?a:0);},0);}
+
+/* --- Fase 7: Carteiras VR/VA (dinheiro restrito a comida) --- */
+// Tipos de receita que viram carteira (e qual carteira). VR=Refeição, VA=Alimentação.
+const VALE_TIPOS={
+  'Ticket Refeição':'Refeição','VR (Vale-Refeição)':'Refeição','VR/VA':'Refeição',
+  'Ticket Alimentação':'Alimentação','VA (Vale-Alimentação)':'Alimentação'
+};
+const isVale=t=>!!VALE_TIPOS[t];
+const temVale=()=>db.receitas.some(r=>isVale(r.tipo))||db.recorrencias.some(r=>r.tipo==='receita'&&isVale(r.nome));
+// vale recebido acumulado ATÉ o mês ym (opcionalmente de uma carteira só)
+function valeRecebidoAte(ym,wallet){
+  let s=0;
+  db.receitas.forEach(r=>{if(isVale(r.tipo)&&monthKey(r.data)<=ym&&(!wallet||VALE_TIPOS[r.tipo]===wallet))s+=r.valor;});
+  db.recorrencias.filter(r=>r.tipo==='receita'&&isVale(r.nome)&&r.ativo&&(!wallet||VALE_TIPOS[r.nome]===wallet)).forEach(r=>{if(ym>=r.inicio)s+=r.valor*(monthsBetween(r.inicio,ym)+1);});
+  return s;
+}
+// gasto de Alimentação acumulado ATÉ o mês ym (avulsos+parcelas+recorrências)
+function alimGastoAte(ym){
+  let s=0;
+  db.despesas.forEach(d=>{if(d.categoria==='Alimentação'&&monthKey(d.data)<=ym)s+=d.valor;});
+  db.compras.filter(c=>c.categoria==='Alimentação').forEach(c=>{for(let i=0;i<c.parcelas;i++){if(addMonths(monthKey(c.dataInicio),i)<=ym)s+=c.valorParcela;}});
+  db.recorrencias.filter(r=>r.tipo==='despesa'&&r.categoria==='Alimentação'&&r.ativo).forEach(r=>{if(ym>=r.inicio)s+=r.valor*(monthsBetween(r.inicio,ym)+1);});
+  return s;
+}
+// vale que entra no mês ym
+function valeIncomeNoMes(ym){
+  let s=0;
+  db.receitas.forEach(r=>{if(isVale(r.tipo)&&monthKey(r.data)===ym)s+=r.valor;});
+  db.recorrencias.filter(r=>r.tipo==='receita'&&isVale(r.nome)&&r.ativo&&ym>=r.inicio).forEach(r=>s+=r.valor);
+  return s;
+}
+// saldos atuais das carteiras (alocação Refeição-first sobre os gastos de Alimentação)
+function saldosVale(){
+  const ym=thisMonth();
+  const recRef=valeRecebidoAte(ym,'Refeição'), recAli=valeRecebidoAte(ym,'Alimentação'), gasto=alimGastoAte(ym);
+  const saldoRef=Math.max(0,recRef-gasto);
+  const restoGasto=Math.max(0,gasto-recRef);
+  const saldoAli=Math.max(0,recAli-restoGasto);
+  const foraVale=Math.max(0,gasto-recRef-recAli); // comida paga com dinheiro de verdade
+  return {refeicao:saldoRef,alimentacao:saldoAli,total:saldoRef+saldoAli,foraVale,recebido:recRef+recAli,gasto};
+}
+// sobra LIVRE do mês: tira o vale (restrito) das receitas e não conta a comida coberta por vale
+function sobraLivreMes(ym){
+  const receitas=totalReceitasMes(ym), despesas=totalDespesasMes(ym);
+  const valeMes=valeIncomeNoMes(ym), alimMes=spentInCat('Alimentação',ym);
+  const prev=addMonths(ym,-1);
+  const saldoAntes=Math.max(0,valeRecebidoAte(prev)-alimGastoAte(prev));
+  const coberta=Math.min(alimMes,saldoAntes+valeMes);
+  return receitas-valeMes-(despesas-coberta);
+}
+
+/* --- Fase 7: Coach financeiro (regras → dicas priorizadas) --- */
+// p: 3=urgente(vermelho) 2=vigiar(amarelo) 1=positivo. Retorna ordenado por prioridade.
+function coachTips(){
+  const ym=thisMonth(), tips=[];
+  const rec=totalReceitasMes(ym), gas=totalDespesasMes(ym), sobra=rec-gas;
+  const livre=sobraLivreMes(ym), dm=diasMes();
+  // 1) gastando mais do que ganha
+  if(rec>0&&sobra<0)tips.push({p:3,ic:'😡',msg:`Tá gastando mais do que ganha (${brl(-sobra)} no vermelho). Pisa no freio.`});
+  // 2) budget estourado
+  for(const c of CATS){const b=db.budgets[c.id]||0;if(b>0){const g=spentInCat(c.id,ym);if(g>b){tips.push({p:3,ic:'🚨',msg:`${c.ic} ${c.id} estourou o budget em ${brl(g-b)}. Segura o resto do mês.`});break;}}}
+  // 3) projetos pedem mais do que sobra livre
+  const compr=compromissoProjetos(ym);
+  if(compr>0&&compr>livre)tips.push({p:3,ic:'🏆',msg:`Seus projetos pedem ${brl(compr)}/mês, mas só sobra ${brl(livre)} livre. Reveja prazos.`});
+  // 4) projeto atrasado
+  const atras=db.metas.find(m=>(Number(m.aporteMensal)||0)>0&&!m.concluida&&projetoStatus(m).atrasado);
+  if(atras)tips.push({p:2,ic:'⏳',msg:`Projeto "${atras.nome}" tá atrasado pro prazo. Veja quanto guardar a mais.`});
+  // 5) vale parado perto do fim do mês
+  const sv=saldosVale();
+  if(sv.total>0&&dm.faltam<=10)tips.push({p:2,ic:'🍔',msg:`Tem ${brl(sv.total)} de vale parado e faltam ${dm.faltam} dias. Usa antes de virar o mês!`});
+  // 6) aniversário em ≤7 dias sem comprar
+  const aniv=db.presentes.filter(pr=>{const d=diasAteAniv(pr);return !presenteCompradoCiclo(pr)&&d!=null&&d>=0&&d<=7;}).sort((a,b)=>diasAteAniv(a)-diasAteAniv(b))[0];
+  if(aniv)tips.push({p:2,ic:'🎁',msg:`Aniversário de ${aniv.pessoa} em ${diasAteAniv(aniv)} dia(s). Garante o presente.`});
+  // 7) taxa de poupança baixa
+  if(rec>0&&sobra>=0&&sobra/rec<0.1)tips.push({p:2,ic:'😐',msg:`Sobrou pouco este mês (${Math.round(sobra/rec*100)}%). Dá pra apertar um pouco.`});
+  // 8) reforço positivo (sempre tem ao menos um)
+  const azul=mesesNoAzul(), st=db.gamificacao.streak||0;
+  if(rec>0&&sobra>0)tips.push({p:1,ic:'😎',msg:`Boa! ${azul} ${azul===1?'mês':'meses'} no azul e ${st} dia(s) em dia. Mantém o ritmo.`});
+  if(rec===0&&gas===0)tips.push({p:1,ic:'🐷',msg:'Bora começar! Lança suas receitas e gastos pra eu te ajudar.'});
+  return tips.sort((a,b)=>b.p-a.p);
+}
+// dica principal (mais urgente)
+function coachTop(){return coachTips()[0]||{ic:'🐷',msg:'Tô de olho nas suas finanças.'};}
+// resumo da semana: o que foi bem, o que vigiar e a ação principal
+function resumoSemanal(){
+  const ym=thisMonth(), rec=totalReceitasMes(ym), gas=totalDespesasMes(ym), sobra=rec-gas;
+  const azul=mesesNoAzul(), st=db.gamificacao.streak||0, sv=saldosVale();
+  const bem=[];
+  if(st>0)bem.push(`${st} dia(s) seguidos em dia 🔥`);
+  if(rec>0&&sobra>0)bem.push(`mês no azul com ${brl(sobra)} de sobra`);
+  if(azul>=2)bem.push(`${azul} meses no azul seguidos`);
+  if(!bem.length)bem.push('comece lançando receitas e gastos');
+  const tips=coachTips();
+  const vigiar=tips.filter(t=>t.p>=2).slice(0,2).map(t=>t.ic+' '+t.msg);
+  const acaoTip=tips.find(t=>t.p>=2);
+  const acao=acaoTip?acaoTip.msg:(sv.total>0?`Aproveite ${brl(sv.total)} de vale disponível.`:'Siga registrando e batendo suas metas. 💪');
+  return {bem,vigiar,acao};
+}
+function comprarPresente(id){
+  const p=db.presentes.find(x=>x.id===id); if(!p)return;
+  const occ=proxAniversario(p); if(!occ)return;
+  const sugestao=p.budget||'';
+  const v=parseFloat(prompt('Quanto você gastou no presente de '+p.pessoa+'? (R$)',sugestao));
+  if(!v||v<=0)return;
+  db.despesas.push({id:uid(),categoria:'Compras',valor:v,data:todayStr(),descricao:'🎁 '+p.pessoa+(p.ideia?' · '+p.ideia:'')});
+  p.compradoAno=occ.getFullYear();
+  gainXp(20,'presente comprado');
+  unlock('presenteador','Presenteador 🎁 — primeiro presente entregue');
+  registrarCheckin(); save(); renderAll();
+  toast('🎁 Presente de '+p.pessoa+' garantido!');
+}
+
+// registra uso "em dia" e cuida do streak diário
+function registrarCheckin(){
+  const g=db.gamificacao, hoje=todayStr();
+  if(g.ultimoDia===hoje)return;
+  g.streak = (g.ultimoDia===ontemStr()) ? (g.streak||0)+1 : 1;
+  g.ultimoDia=hoje;
+  gainXp(5,'em dia ('+g.streak+'d)');
+  if(g.streak>=7)unlock('streak7','7 dias seguidos em dia 🔥');
+  if(g.streak>=30)unlock('streak30','30 dias em dia 🔥🔥');
+}
+function levelFromXp(xp){let lvl=Math.floor(Math.sqrt(xp/60))+1; return Math.min(lvl,LEVELS.length);}
+function xpForLevel(l){return Math.pow(l-1,2)*60;}
+function levelName(l){return LEVELS[Math.min(l-1,LEVELS.length-1)];}
+
+function gainXp(amount,reason){
+  const before=levelFromXp(db.gamificacao.xp);
+  db.gamificacao.xp+=amount;
+  const after=levelFromXp(db.gamificacao.xp);
+  if(after>before){toast('🎉 Subiu pro Nível '+after+'!');unlock('lvl'+after,'Nível '+after+' — '+levelName(after));}
+  else toast('+'+amount+' XP · '+reason);
+}
+function unlock(id,label){
+  if(db.gamificacao.conquistas.find(c=>c.id===id))return;
+  db.gamificacao.conquistas.push({id,label,date:todayStr()});
+  if(!id.startsWith('lvl'))gainXp(25,'conquista');  // resultado dá XP; level-up não recursiona
+}
+function checkAchievements(){
+  if(db.receitas.length>=1)unlock('rec1','Primeira receita registrada 💵');
+  if(db.receitas.length>=10)unlock('rec10','10 receitas registradas 📈');
+  if(db.despesas.length>=1)unlock('exp1','Primeiro gasto lançado 💸');
+  if(Object.keys(db.budgets).length>=1)unlock('budget1','Primeiro budget definido 🧮');
+  if((db.compras||[]).length>=1)unlock('parc1','Primeira compra parcelada 💳');
+  if((db.recorrencias||[]).length>=1)unlock('fixo1','Primeiro lançamento fixo 🔁');
+  if(db.metas.length>=1)unlock('goal1','Primeira meta criada 🎯');
+  if((db.presentes||[]).length>=1)unlock('presente1','Primeiro presente planejado 🎁');
+  const tg=db.tamagotchi||{};
+  if((tg.totalFechamentos||0)>=1)unlock('tama1','Cuidou do QUASE NADA 🐷');
+  if((tg.recorde||0)>=7)unlock('tama7','7 dias cuidando do QUASE NADA 🔥');
+  if((tg.recorde||0)>=30)unlock('tama30','30 dias de cuidado 🏆');
+  if(db.metas.some(m=>m.atual>=m.alvo))unlock('goalDone','Primeira meta batida 🏆');
+  // mês no azul: tem receita e gasto no mês atual e sobra positiva
+  const ym=thisMonth();
+  const r=totalReceitasMes(ym), g=totalDespesasMes(ym);
+  if(r>0&&g>0&&r-g>0)unlock('azul','Mês no azul 💙');
+}
+
+/* ---------- AÇÕES ---------- */
+function addReceita(){
+  const v=parseFloat(document.getElementById('recVal').value);
+  const date=document.getElementById('recDate').value;
+  if(!v||v<=0)return toast('⚠️ Informe um valor');
+  if(!date)return toast('⚠️ Escolha a data');
+  const tipo=document.getElementById('recTipo').value;
+  const recorrente=document.getElementById('recRec').checked;
+  if(recorrente){
+    db.recorrencias.push({id:uid(),tipo:'receita',nome:tipo,categoria:null,valor:v,diaDoMes:+date.slice(8,10),inicio:monthKey(date),ativo:true});
+  }else{
+    db.receitas.push({id:uid(),tipo,valor:v,data:date,recorrente:false});
+  }
+  registrarCheckin(); checkAchievements(); save(); closeSheet(); renderAll();
+}
+function delReceita(id){db.receitas=db.receitas.filter(r=>r.id!==id);save();renderAll();}
+function delRecorrencia(id){db.recorrencias=db.recorrencias.filter(r=>r.id!==id);save();renderAll();}
+function toggleRecorrencia(id){const r=db.recorrencias.find(x=>x.id===id);if(r){r.ativo=!r.ativo;save();renderAll();}}
+
+function addGoal(){
+  const name=document.getElementById('goalName').value.trim();
+  const target=parseFloat(document.getElementById('goalTarget').value);
+  const deadline=document.getElementById('goalDeadline').value;
+  const aporte=parseFloat(document.getElementById('goalAporte').value)||0;
+  if(!name)return toast('⚠️ Dê um nome à meta');
+  if(!target||target<=0)return toast('⚠️ Informe o valor alvo');
+  db.metas.push({id:uid(),nome:name,alvo:target,atual:0,prazo:deadline||null,aporteMensal:aporte,concluida:false});
+  registrarCheckin(); checkAchievements(); save(); closeSheet(); renderAll();
+}
+function delGoal(id){db.metas=db.metas.filter(m=>m.id!==id);save();renderAll();}
+function aporte(id){
+  const m=db.metas.find(x=>x.id===id); if(!m)return;
+  const v=parseFloat(prompt('Quanto guardar nesta meta? (R$)','')); if(!v||v<=0)return;
+  m.atual+=v;
+  if(m.atual>=m.alvo && !m.concluida){m.concluida=true;gainXp(XP.metaConcluida,'meta batida');
+    if((Number(m.aporteMensal)||0)>0)unlock('projetoDone','Sonho realizado 🏆 — projeto de longo prazo concluído');}
+  else gainXp(XP.aporte,'aporte');
+  registrarCheckin(); checkAchievements(); save(); renderAll();
+}
+
+function addDespesa(){
+  const v=parseFloat(document.getElementById('expVal').value);
+  const date=document.getElementById('expDate').value;
+  if(!v||v<=0)return toast('⚠️ Informe um valor');
+  if(!date)return toast('⚠️ Escolha a data');
+  const categoria=document.getElementById('expCat').value;
+  const descricao=document.getElementById('expDesc').value.trim();
+  const fixo=document.getElementById('expFixo').checked;
+  const parcelas=Math.max(1,parseInt(document.getElementById('expParc').value)||1);
+  const cartaoId=document.getElementById('expCart').value||null;
+  if(fixo){
+    db.recorrencias.push({id:uid(),tipo:'despesa',nome:descricao||categoria,categoria,valor:v,diaDoMes:+date.slice(8,10),inicio:monthKey(date),ativo:true});
+  }else if(parcelas>1||cartaoId){
+    const np=Math.max(1,parcelas);
+    db.compras.push({id:uid(),descricao:descricao||categoria,categoria,total:v,parcelas:np,valorParcela:+(v/np).toFixed(2),dataInicio:date,cartaoId});
+  }else{
+    db.despesas.push({id:uid(),categoria,valor:v,data:date,descricao});
+  }
+  registrarCheckin(); checkAchievements(); save(); closeSheet(); renderAll();
+  // alerta de estouro do budget da categoria neste mês
+  const ym=monthKey(date), b=db.budgets[categoria]||0;
+  if(b>0){const gasto=spentInCat(categoria,ym); if(gasto>b)setTimeout(()=>toast('🚨 Budget de '+categoria+' estourado!'),400);}
+}
+function delDespesa(id){db.despesas=db.despesas.filter(d=>d.id!==id);save();renderAll();}
+function delCompra(id){db.compras=db.compras.filter(c=>c.id!==id);save();renderAll();}
+
+function spentInCat(cat,ym){return despesasNoMes(ym).filter(x=>x.categoria===cat).reduce((s,x)=>s+x.valor,0);}
+function setBudget(cat,val){
+  const n=parseFloat(val)||0;
+  if(n>0){db.budgets[cat]=n;registrarCheckin();checkAchievements();}
+  else delete db.budgets[cat];
+  save(); renderAll();
+}
+
+/* ---------- RENDER ---------- */
+let chart;
+function renderAll(){resolveDesafios();checkEvolucao();checkColecao();renderDash();renderRec();renderExp();renderGoals();renderDesafios();renderPresentes();renderAnivAlert();renderAch();renderSet();renderCartoes();renderEmprestimos();renderForecast();renderMascote();renderMerreca();renderCarteiras();renderCoach();renderTama();renderCofre();}
+
+function renderMascote(){
+  const azul=mesesNoAzul(), st=db.gamificacao.streak||0, f=faseAtual();
+  const nv=nivelVermelho();
+  if(nv){ // MODO VERMELHO: porquinho rabugento/furioso te cutucando
+    document.getElementById('dMascot').innerHTML=`<div class="item mascot mood-bravo fase-${f.idx}" style="display:flex;gap:14px;align-items:center">
+      <img src="${MASCOTE_URI}" style="width:${f.img}px;flex:none">
+      <div class="mid"><div class="s" style="font-weight:800;color:var(--bad);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">QUASE NADA · ${f.emoji} ${f.nome}</div>
+        <div class="t">${nv.emoji} ${falaBronca(nv.n)}</div>
+        <div class="s" style="color:var(--bad)">🔻 Nível −${nv.n} · ${nv.nome} · ${nv.meses>1?nv.meses+' meses no vermelho':'no vermelho'} · rombo ${brl(nv.deficit)}</div></div>
+    </div>`;
+    return;
+  }
+  // AZUL: ~1/3 dos dias o porquinho sai rabugento (estável no dia), senão dica do coach
+  const h=humorMascote();
+  const rabugento = diaSeed()%3===0;
+  const fala = rabugento ? RABUGICE[diaSeed()%RABUGICE.length] : coachTop().msg;
+  const cara = rabugento ? '😒' : h.emoji;
+  document.getElementById('dMascot').innerHTML=`<div class="item mascot mood-${h.key} fase-${f.idx}" style="display:flex;gap:14px;align-items:center">
+    <img src="${MASCOTE_URI}" style="width:${f.img}px;flex:none">
+    <div class="mid"><div class="s" style="font-weight:800;color:var(--green2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">QUASE NADA · ${f.emoji} ${f.nome}</div>
+      <div class="t">${cara} ${fala}</div>
+      <div class="s">🔥 ${azul} ${azul===1?'mês':'meses'} no azul · ${st} dia(s) em dia</div></div>
+  </div>`;
+}
+function renderCarteiras(){
+  const el=document.getElementById('dCarteiras');
+  if(!temVale()){el.innerHTML='';return;}
+  const s=saldosVale();
+  el.innerHTML=`<h2 class="sec" style="margin-top:18px">Carteiras (vale) 🍔</h2>
+    <div class="cards">
+      <div class="card"><div class="lbl">🍴 Vale-Refeição</div><div class="val pos" style="font-size:20px">${brl(s.refeicao)}</div></div>
+      <div class="card"><div class="lbl">🛒 Vale-Alimentação</div><div class="val pos" style="font-size:20px">${brl(s.alimentacao)}</div></div>
+      <div class="card wide"><div class="lbl">Saldo total de vale (não entra na Merreca)</div>
+        <div class="val pos">${brl(s.total)}</div>
+        <div class="lbl" style="margin-top:4px">${s.foraVale>0?'Você pagou '+brl(s.foraVale)+' de comida com dinheiro próprio.':'Cobre seus gastos de Alimentação 🍔'}</div></div>
+    </div>`;
+}
+function renderCoach(){
+  const r=resumoSemanal();
+  document.getElementById('dCoach').innerHTML=`<div class="item" style="display:block">
+    <div class="t">✅ Foi bem: <span style="font-weight:600;color:var(--muted)">${r.bem.join(' · ')}</span></div>
+    ${r.vigiar.length?`<div class="s" style="margin-top:8px;color:var(--txt)">👀 De olho:<br>${r.vigiar.join('<br>')}</div>`:''}
+    <div class="s" style="margin-top:8px"><b style="color:var(--green2)">🎯 Ação da semana:</b> ${r.acao}</div>
+  </div>`;
+}
+function renderTama(){
+  const el=document.getElementById('dTama'), t=db.tamagotchi, fa=faseAtual();
+  const en=tamaEnergia(), seq=t.sequencia||0, rec=t.recorde||0, fechou=fechouHoje(), dias=tamaDiasDesde();
+  const cls=en>=66?'':en>=33?'mid':'low';
+  const estado = fechou ? '✓ Dia fechado! Volta amanhã pra cuidar dele. 🐷'
+    : (t.ultimoFechamento==null ? 'Bora começar: feche seu primeiro dia com o QUASE NADA! 🐷'
+    : dias>=3 ? `Tá com saudade… ${dias} dias sem aparecer. 😢`
+    : 'Fecha o dia pra ele ficar feliz e a sequência crescer.');
+  el.innerHTML=`<div class="tama">
+    <div class="grow">
+      <div><div class="t">🐷 Cuidar do QUASE NADA</div>
+        <div class="s">Energia ${en}% · sequência ${seq} dia(s)${rec>seq&&rec>0?' · recorde '+rec:''}</div></div>
+      ${fechou?'<span class="soonpill" style="color:var(--green2);border-color:var(--greenDk)">✓ fechado</span>'
+        :'<button class="btn primary sm" onclick="openFecharSheet()">Fechar o dia</button>'}
+    </div>
+    <div class="enbar"><i class="${cls}" style="width:${en}%"></i></div>
+    <div class="s" style="margin-top:8px">${estado}</div>
+    <div class="grow" style="margin-top:12px">
+      <div class="s">${fa.emoji} Fase: <b style="color:var(--green2)">${fa.nome}</b>${fa.prox?` · faltam ${brl(fa.restante)} pra ${fa.prox.nome} ${fa.prox.emoji}`:' · nível máximo! 🐉'}</div>
+      <span class="fasechip">${fa.idx+1}/${FASES.length}</span>
+    </div>
+    <div class="enbar" style="height:8px"><i style="width:${fa.pct}%"></i></div>
+  </div>`;
+}
+function renderCofre(){
+  const c=cofreInfo(), col=db.tamagotchi.colecao||[];
+  const grid=MARCOS.map((m,i)=>{
+    const got=col.includes(i);
+    return `<div class="badge${got?'':' locked'}"><div class="medal">${got?m.it:'🔒'}</div>
+      <div class="bl">${m.n}</div><div class="bd">${got?'conquistado':brl(m.v)}</div></div>`;
+  }).join('');
+  document.getElementById('dCofre').innerHTML=`<div class="item" style="display:block">
+    <div style="display:flex;gap:14px;align-items:center">
+      <div class="jar"><div class="jar-fill" style="height:${c.fill}%"></div><span class="jar-coin">🪙</span></div>
+      <div class="mid"><div class="t">💰 ${brl(c.p)} guardado</div>
+        <div class="s">${c.next?`Faltam <b style="color:var(--green2)">${brl(c.next.v-c.p)}</b> pro próximo item: ${c.next.it} ${c.next.n}`:'Coleção completa! Você é uma 🐉 lenda do cofrinho!'}</div></div>
+    </div>
+    <div class="galeria" style="margin-top:14px">${grid}</div>
+  </div>`;
+}
+function openFecharSheet(){
+  const m=merreca(), gh=gastoHoje(), dentro=dentroDaMerrecaHoje();
+  document.getElementById('fdResumo').innerHTML=`Merreca de hoje: <b style="color:var(--green2)">${brl(m.dia)}</b> · gasto de hoje: <b>${brl(gh)}</b><br>${dentro?'😎 Dentro da Merreca — QUASE NADA vai jantar bem!':'😬 Passou da Merreca de hoje. Pode fechar mesmo assim (conta a sequência).'}`;
+  document.getElementById('fdLancou').checked=false;
+  document.getElementById('fecharSheet').classList.add('open');
+}
+function closeFecharSheet(){document.getElementById('fecharSheet').classList.remove('open');}
+
+/* --- Fase 9b: evolução do QUASE NADA (cresce com o patrimônio guardado) --- */
+const FASES=[
+  {nome:'Filhote',emoji:'🐣',min:0,img:54},
+  {nome:'Jovem',emoji:'🐷',min:500,img:62},
+  {nome:'Adulto',emoji:'🐖',min:5000,img:70},
+  {nome:'Turbinado',emoji:'🐗',min:20000,img:80},
+  {nome:'Lendário',emoji:'🐉',min:50000,img:92}
+];
+function patrimonioGuardado(){return db.metas.reduce((s,m)=>s+(Number(m.atual)||0),0);}
+function faseAtual(){
+  const p=patrimonioGuardado();
+  let idx=0; for(let i=0;i<FASES.length;i++)if(p>=FASES[i].min)idx=i;
+  const prox=FASES[idx+1]||null, base=FASES[idx].min;
+  const pct=prox?Math.min(100,Math.round((p-base)/(prox.min-base)*100)):100;
+  return {idx,nome:FASES[idx].nome,emoji:FASES[idx].emoji,img:FASES[idx].img,patrimonio:p,prox,restante:prox?Math.max(0,prox.min-p):0,pct};
+}
+// comemora quando sobe de fase (e regride sem drama se resgatar metas)
+function checkEvolucao(){
+  const f=faseAtual(), prev=db.tamagotchi.fase||0;
+  if(f.idx>prev){
+    db.tamagotchi.fase=f.idx; save();
+    unlock('evo'+f.idx,'QUASE NADA evoluiu pra '+f.nome+' '+f.emoji);
+    toast('🎉 QUASE NADA evoluiu pra '+f.nome+'! '+f.emoji);
+  }else if(f.idx<prev){db.tamagotchi.fase=f.idx; save();}
+}
+
+/* --- Fase 9c: cofrinho & coleção (marcos de patrimônio guardado) --- */
+const MARCOS=[
+  {v:100,it:'🪙',n:'Primeira moeda'},
+  {v:500,it:'💵',n:'Maço de grana'},
+  {v:1000,it:'💰',n:'Saco de dinheiro'},
+  {v:5000,it:'🏆',n:'Troféu dourado'},
+  {v:10000,it:'💎',n:'Diamante'},
+  {v:25000,it:'👑',n:'Coroa'},
+  {v:50000,it:'🐉',n:'Dragão do tesouro'},
+  {v:100000,it:'🚀',n:'Foguete'}
+];
+function cofreInfo(){
+  const p=patrimonioGuardado();
+  const next=MARCOS.find(m=>m.v>p)||null;
+  let prevV=0; for(const m of MARCOS){if(m.v<=p)prevV=m.v;else break;}
+  const fill=next?Math.min(100,Math.round((p-prevV)/(next.v-prevV)*100)):100;
+  return {p,next,prevV,fill};
+}
+// ganha item ao bater um marco (fica na coleção pra sempre, mesmo se resgatar depois)
+function checkColecao(){
+  const p=patrimonioGuardado();
+  const col=db.tamagotchi.colecao||(db.tamagotchi.colecao=[]);
+  MARCOS.forEach((m,i)=>{
+    if(p>=m.v && !col.includes(i)){
+      col.push(i); db.gamificacao.xp+=15; save();
+      toast('🎁 Item novo na coleção: '+m.it+' '+m.n+'!');
+    }
+  });
+}
+function renderMerreca(){
+  const m=merreca();
+  const el=document.getElementById('dMerreca');
+  const sub = m.sobra<=0
+    ? 'Sem Merreca este mês — sua sobra livre está zerada ou negativa. 🐷'
+    : `Esta semana: <b>${brl(m.semana)}</b> · sobra livre: <b>${brl(m.sobra)}</b>${temVale()?' · já descontei o vale':''}`;
+  el.innerHTML=`<div class="merreca">
+    <div class="lbl">🪙 Merreca de hoje <span style="color:var(--muted)">(pode gastar sem culpa)</span></div>
+    <div class="big">${brl(m.dia)}</div>
+    <div class="sub">${sub}</div>
+  </div>`;
+}
+
+function renderSet(){
+  const el=document.getElementById('cardSettings');
+  if(!el)return;
+  if(!db.cartoes.length){el.innerHTML='<div class="empty" style="padding:14px">Nenhum cartão ainda.</div>';return;}
+  el.innerHTML=db.cartoes.map(c=>`<div class="item" style="display:block;position:relative">
+    <input class="binput" style="width:calc(100% - 28px);text-align:left;margin-bottom:8px" value="${c.nome||''}" placeholder="Nome do cartão" onchange="setCartaoCampo('${c.id}','nome',this.value)">
+    <label class="f" style="margin-top:0">Limite (R$)</label>
+    <input class="binput" style="width:100%;text-align:left" type="number" inputmode="decimal" value="${c.limite||''}" placeholder="ex.: 5000" onchange="setCartaoCampo('${c.id}','limite',this.value)">
+    <div class="row2">
+      <div style="flex:1"><label class="f">Fechamento</label>
+        <input class="binput" style="width:100%;text-align:left" type="number" inputmode="numeric" min="1" max="31" value="${c.fechamento||''}" placeholder="dia" onchange="setCartaoCampo('${c.id}','fechamento',this.value)"></div>
+      <div style="flex:1"><label class="f">Vencimento</label>
+        <input class="binput" style="width:100%;text-align:left" type="number" inputmode="numeric" min="1" max="31" value="${c.vencimento||''}" placeholder="dia" onchange="setCartaoCampo('${c.id}','vencimento',this.value)"></div>
+    </div>
+    <button class="del" style="position:absolute;top:10px;right:8px" onclick="delCartao('${c.id}')">✕</button>
+  </div>`).join('');
+}
+function renderCartoes(){
+  const el=document.getElementById('dCartao');
+  if(!db.cartoes.length){el.innerHTML='<div class="item"><div class="ic">💳</div><div class="mid"><div class="t">Nenhum cartão</div><div class="s">Adicione em Ajustes ⚙️</div></div></div>';return;}
+  el.innerHTML=db.cartoes.map(c=>{
+    const usado=cartaoUsado(c.id), lim=Number(c.limite)||0, disp=Math.max(0,lim-usado);
+    const pct=lim>0?Math.min(100,Math.round(usado/lim*100)):0, over=lim>0&&usado>lim;
+    const fech=c.fechamento?fmtCurta(proxDia(c.fechamento)):'—', venc=c.vencimento?fmtCurta(proxDia(c.vencimento)):'—';
+    return `<div class="item goal" style="display:block">
+      <div class="grow"><div class="mid"><div class="t">💳 ${c.nome||'Cartão'}</div>
+        <div class="s">Fecha ${fech} · vence ${venc} · fatura ${brl(faturaCartao(c.id))}</div></div>
+        ${lim>0?`<div class="amt" style="color:${over?'var(--bad)':'var(--green2)'};text-align:right">${brl(disp)}<div class="s" style="color:var(--muted)">disponível</div></div>`:''}</div>
+      ${lim>0?`<div class="gbar"><i class="${(pct>=80||over)?'over':''}" style="width:${pct}%"></i></div>
+        <div class="s" style="margin-top:6px">Usado ${brl(usado)} de ${brl(lim)} · ${pct}%${over?' · 🚨 acima do limite!':pct>=80?' · ⚠️ perto do limite':''}</div>`
+        :'<div class="s" style="margin-top:6px;color:var(--muted)">Defina o limite em Ajustes pra acompanhar o uso.</div>'}
+    </div>`;
+  }).join('');
+}
+function renderEmprestimos(){
+  const el=document.getElementById('dEmprestimos');
+  if(!db.emprestimos.length){el.innerHTML='<div class="empty" style="padding:14px">Nenhum empréstimo. Toque no + → 🏦 pra cadastrar e ver se o juros tá justo.</div>';return;}
+  el.innerHTML=db.emprestimos.map(e=>{
+    const a=emprestimoAnalise(e);
+    const d=monthsBetween(monthKey(e.dataInicio),thisMonth());
+    const parcelaAtual=Math.min(Math.max(d+1,1),e.nParcelas);
+    const fim=addMonths(monthKey(e.dataInicio),e.nParcelas-1);
+    const quitado=d>=e.nParcelas;
+    return `<div class="item goal" style="display:block;position:relative">
+      <div class="grow"><div class="mid"><div class="t">🏦 ${e.nome}</div>
+        <div class="s">${quitado?'✓ quitado':`Parcela ${parcelaAtual}/${e.nParcelas} · ${brl(e.parcela)}/mês · termina ${mesNome(fim)}`}</div></div></div>
+      <div class="s" style="margin-top:6px">Taxa ~<b>${a.taxaMes.toFixed(2)}% a.m.</b> · <span style="color:var(--muted)">ref. ${a.ref.nome} ${a.ref.ref}%</span> · <b style="color:${a.cor}">${a.veredito}</b></div>
+      <div class="s" style="margin-top:2px;color:var(--muted)">Juros total ${brl(a.totalJuros)} (paga ${brl(a.totalPago)} por ${brl(a.P)})${a.peso!=null?` · parcela = ${a.peso.toFixed(0)}% da renda`:''}</div>
+      <button class="del" style="position:absolute;top:14px;right:10px" onclick="delEmprestimo('${e.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+function renderForecast(){
+  const el=document.getElementById('dForecast');
+  let rows='';
+  for(let i=1;i<=6;i++){
+    const ym=addMonths(thisMonth(),i);
+    const r=totalReceitasMes(ym),g=totalDespesasMes(ym),s=r-g;
+    const nP=db.compras.filter(c=>parcelaNoMes(c,ym)).length;
+    rows+=`<div class="item"><div class="ic">📅</div>
+      <div class="mid"><div class="t">${mesNome(ym)}</div>
+        <div class="s">Entra ${brl(r)} · sai ${brl(g)}${nP?` · ${nP} parcela(s)`:''}</div></div>
+      <div class="amt" style="color:${s<0?'var(--bad)':'var(--green2)'}">${brl(s)}</div></div>`;
+  }
+  el.innerHTML='<div class="s" style="color:var(--muted);margin:0 4px 8px">Projeção com recorrências e parcelas (não inclui gastos avulsos futuros).</div>'+rows;
+}
+
+function renderDash(){
+  const now=new Date();
+  const dm=diasMes();
+  document.getElementById('dHoje').textContent=`📆 Hoje, dia ${dm.dia} · faltam ${dm.faltam} dia(s) pro fim do mês`;
+  const ym=thisMonth();
+  const rec=totalReceitasMes(ym);
+  const gas=totalDespesasMes(ym);
+  const sobra=rec-gas;
+  document.getElementById('dMonth').textContent=brl(rec);
+  document.getElementById('dSpend').textContent=brl(gas);
+  const sEl=document.getElementById('dSobra');
+  sEl.textContent=brl(sobra);
+  sEl.className='val '+(sobra<0?'neg':'pos');
+  const hint=document.getElementById('dSobraHint');
+  const compr=compromissoProjetos(ym);
+  hint.textContent = (rec===0&&gas===0 ? 'Lance receitas e gastos para ver sua sobra.'
+    : sobra<0 ? 'Atenção: você gastou mais do que recebeu este mês.'
+    : 'Você guardou '+(rec>0?Math.round(sobra/rec*100):0)+'% da sua receita do mês. 💪')
+    + (compr>0?' · '+brl(compr)+'/mês reservado p/ projetos':'');
+
+  const xp=db.gamificacao.xp, lvl=levelFromXp(xp);
+  const base=xpForLevel(lvl), next=xpForLevel(lvl+1);
+  const pct=lvl>=LEVELS.length?100:Math.round((xp-base)/(next-base)*100);
+  document.getElementById('dXp').textContent=xp;
+  document.getElementById('dLvl').textContent='Nível '+lvl+' — '+levelName(lvl);
+  document.getElementById('dXpBar').style.width=pct+'%';
+  const nv=nivelVermelho(), chipBox=document.querySelector('.lvlchip');
+  if(nv){chipBox.classList.add('red');document.getElementById('lvlChip').textContent='Nível −'+nv.n+' '+nv.emoji;}
+  else{chipBox.classList.remove('red');document.getElementById('lvlChip').textContent='Nível '+lvl;}
+
+  // chart: últimos 6 meses, receitas x despesas
+  const labels=[],rVals=[],gVals=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    labels.push(d.toLocaleDateString('pt-BR',{month:'short'}));
+    rVals.push(totalReceitasMes(k));
+    gVals.push(totalDespesasMes(k));
+  }
+  drawChart(labels,rVals,gVals);
+
+  // metas no painel
+  const g=document.getElementById('dGoals');
+  const active=db.metas.filter(m=>!m.concluida).slice(0,3);
+  g.innerHTML = active.length? active.map(goalCard).join('') :
+    '<div class="empty">Nenhuma meta ativa. Toque no + pra criar uma.</div>';
+}
+
+function drawChart(labels,rVals,gVals){
+  const ctx=document.getElementById('chart');
+  if(chart)chart.destroy();
+  chart=new Chart(ctx,{type:'bar',data:{labels,datasets:[
+    {label:'Receitas',data:rVals,backgroundColor:'rgba(70,201,50,.75)',borderColor:'#7de85b',borderWidth:1,borderRadius:6},
+    {label:'Gastos',data:gVals,backgroundColor:'rgba(255,107,94,.7)',borderColor:'#ff9d4f',borderWidth:1,borderRadius:6}
+  ]},
+    options:{plugins:{legend:{labels:{color:'#8aa394',boxWidth:12,font:{size:11}}},
+      tooltip:{callbacks:{label:c=>c.dataset.label+': '+brl(c.raw)}}},
+      scales:{y:{ticks:{color:'#8aa394',callback:v=>'R$'+v},grid:{color:'#1d2f24'}},
+              x:{ticks:{color:'#8aa394'},grid:{display:false}}},
+      maintainAspectRatio:false}});
+}
+
+function renderRec(){
+  const l=document.getElementById('recList');
+  const ic={'Salário':'💼','Bônus':'🎁','PLR':'📊','Outro':'💰'};
+  const fixas=db.recorrencias.filter(r=>r.tipo==='receita');
+  if(!db.receitas.length&&!fixas.length){l.innerHTML=emptyMascot('Sem receitas ainda.<br>Toque no + pra lançar seu salário, bônus ou PLR.');return;}
+  let html='';
+  if(fixas.length){
+    html+='<h2 class="sec" style="margin-top:4px">Receitas fixas 🔁</h2>';
+    html+=fixas.map(r=>`<div class="item" style="opacity:${r.ativo?1:.5}">
+      <div class="ic">🔁</div>
+      <div class="mid"><div class="t">${r.nome}</div><div class="s">Todo dia ${r.diaDoMes} · ${r.ativo?'ativa':'pausada'}</div></div>
+      <div class="amt">${brl(r.valor)}</div>
+      <button class="del" onclick="toggleRecorrencia('${r.id}')">${r.ativo?'⏸':'▶️'}</button>
+      <button class="del" onclick="delRecorrencia('${r.id}')">✕</button>
+    </div>`).join('');
+  }
+  if(db.receitas.length){
+    html+='<h2 class="sec">Receitas avulsas</h2>';
+    html+=[...db.receitas].sort((a,b)=>b.data.localeCompare(a.data)).map(r=>`
+    <div class="item">
+      <div class="ic">${ic[r.tipo]||'💰'}</div>
+      <div class="mid"><div class="t">${r.tipo}</div>
+        <div class="s">${fmtDate(r.data)}</div></div>
+      <div class="amt">${brl(r.valor)}</div>
+      <button class="del" onclick="delReceita('${r.id}')">✕</button>
+    </div>`).join('');
+  }
+  l.innerHTML=html;
+}
+
+function renderExp(){
+  const now=new Date();
+  const ym=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  // painel de budgets: categorias com budget definido OU com gasto no mês
+  const bp=document.getElementById('budgetPanel');
+  const rows=CATS.filter(c=>db.budgets[c.id]||spentInCat(c.id,ym)>0).map(c=>{
+    const b=db.budgets[c.id]||0, g=spentInCat(c.id,ym);
+    const pct=b>0?Math.min(100,Math.round(g/b*100)):0, over=b>0&&g>b;
+    return `<div class="item goal" style="display:block">
+      <div class="grow">
+        <div class="mid"><div class="t">${c.ic} ${c.id}</div>
+          <div class="s">Gasto ${brl(g)}${b>0?' de '+brl(b)+' · '+pct+'%':' · sem budget'}</div></div>
+        <input class="binput" type="number" inputmode="decimal" value="${b||''}" placeholder="budget"
+          onchange="setBudget('${c.id}',this.value)">
+      </div>
+      ${b>0?`<div class="gbar"><i class="${over?'over':''}" style="width:${pct}%"></i></div>`:''}
+      ${over?`<div class="overmsg">🚨 Estourou ${brl(g-b)} acima do budget</div>`:''}
+    </div>`;
+  }).join('');
+  bp.innerHTML = rows || '<div class="empty" style="padding:18px">Defina um budget lançando um gasto ou toque numa categoria depois do primeiro lançamento.</div>';
+  // se nada ainda, mostra todas as categorias pra definir budget
+  if(!rows){
+    bp.innerHTML = CATS.map(c=>`<div class="item">
+      <div class="ic">${c.ic}</div>
+      <div class="mid"><div class="t">${c.id}</div><div class="s">Sem budget</div></div>
+      <input class="binput" type="number" inputmode="decimal" placeholder="budget" onchange="setBudget('${c.id}',this.value)">
+    </div>`).join('');
+  }
+
+  // lançamentos
+  const l=document.getElementById('expList');
+  const fixos=db.recorrencias.filter(r=>r.tipo==='despesa');
+  // compras parceladas ainda ativas (não terminaram)
+  const ativas=db.compras.filter(c=>monthsBetween(monthKey(c.dataInicio),ym)<c.parcelas);
+  if(!db.despesas.length&&!fixos.length&&!db.compras.length){
+    l.innerHTML=emptyMascot('Sem gastos ainda.<br>Toque no + pra lançar uma despesa.');return;
+  }
+  let html='';
+  if(ativas.length){
+    html+='<h2 class="sec" style="margin-top:4px">Compras parceladas 💳</h2>';
+    html+=ativas.map(c=>{
+      const diff=monthsBetween(monthKey(c.dataInicio),ym);
+      const num=Math.min(Math.max(diff+1,1),c.parcelas);
+      const fim=addMonths(monthKey(c.dataInicio),c.parcelas-1);
+      return `<div class="item">
+        <div class="ic">${catIc(c.categoria)}</div>
+        <div class="mid"><div class="t">${c.descricao}${c.cartaoId&&cartaoById(c.cartaoId)?` <span style="color:var(--muted);font-weight:600;font-size:12px">💳 ${cartaoById(c.cartaoId).nome}</span>`:''}</div>
+          <div class="s">Parcela ${num}/${c.parcelas} · ${brl(c.valorParcela)}/mês · termina ${mesNome(fim)}</div></div>
+        <div class="amt" style="color:var(--bad)">-${brl(c.total)}</div>
+        <button class="del" onclick="delCompra('${c.id}')">✕</button>
+      </div>`;
+    }).join('');
+  }
+  if(fixos.length){
+    html+='<h2 class="sec">Gastos fixos 🔁</h2>';
+    html+=fixos.map(r=>`<div class="item" style="opacity:${r.ativo?1:.5}">
+      <div class="ic">${catIc(r.categoria)}</div>
+      <div class="mid"><div class="t">${r.nome}</div><div class="s">${r.categoria} · todo dia ${r.diaDoMes} · ${r.ativo?'ativo':'pausado'}</div></div>
+      <div class="amt" style="color:var(--bad)">-${brl(r.valor)}</div>
+      <button class="del" onclick="toggleRecorrencia('${r.id}')">${r.ativo?'⏸':'▶️'}</button>
+      <button class="del" onclick="delRecorrencia('${r.id}')">✕</button>
+    </div>`).join('');
+  }
+  if(db.despesas.length){
+    html+='<h2 class="sec">Gastos avulsos</h2>';
+    html+=[...db.despesas].sort((a,b)=>b.data.localeCompare(a.data)).map(d=>`
+    <div class="item">
+      <div class="ic">${catIc(d.categoria)}</div>
+      <div class="mid"><div class="t">${d.categoria}</div>
+        <div class="s">${fmtDate(d.data)}${d.descricao?' · '+d.descricao:''}</div></div>
+      <div class="amt" style="color:var(--bad)">-${brl(d.valor)}</div>
+      <button class="del" onclick="delDespesa('${d.id}')">✕</button>
+    </div>`).join('');
+  }
+  l.innerHTML=html;
+}
+
+function goalCard(m){
+  const pct=Math.min(100,Math.round(m.atual/m.alvo*100));
+  const proj=(Number(m.aporteMensal)||0)>0;
+  const st=proj&&!m.concluida?projetoStatus(m):null;
+  let extra='';
+  if(st){
+    const eta=st.etaYm?mesNome(st.etaYm):'—';
+    extra=`<div class="s" style="margin-top:6px;color:var(--muted)">🏆 Projeto · guardando ${brl(m.aporteMensal)}/mês · chega em ${eta}${st.mesesRitmo?` (${st.mesesRitmo} ${st.mesesRitmo===1?'mês':'meses'})`:''}</div>`;
+    if(st.atrasado)extra+=`<div class="overmsg">⚠️ No ritmo atual não bate o prazo. Guarde ${brl(st.aporteNecessario)}/mês pra chegar a tempo.</div>`;
+  }
+  return `<div class="item goal" style="display:block">
+    <div class="grow"><div class="mid"><div class="t">${proj?'🏆 ':''}${m.nome} ${m.concluida?'<span class="done">✓ CONCLUÍDA</span>':''}</div>
+      <div class="s">${brl(m.atual)} de ${brl(m.alvo)} · ${pct}%${m.prazo?' · até '+fmtDate(m.prazo):''}</div></div>
+      ${m.concluida?'':`<button class="btn ghost sm" onclick="aporte('${m.id}')">+ Guardar</button>`}
+    </div>
+    <div class="gbar"><i class="${st&&st.atrasado?'over':''}" style="width:${pct}%"></i></div>
+    ${extra}</div>`;
+}
+function renderGoals(){
+  const l=document.getElementById('goalList');
+  if(!db.metas.length){l.innerHTML=emptyMascot('Sem metas ainda.<br>Crie uma meta e ganhe XP ao guardar dinheiro.');return;}
+  const ym=thisMonth(), compromisso=compromissoProjetos(ym);
+  let banner='';
+  if(compromisso>0){
+    const sobraLivre=totalReceitasMes(ym)-(totalDespesasMes(ym)-compromisso);
+    const ok=compromisso<=sobraLivre;
+    banner=`<div class="item" style="display:block;border-color:${ok?'var(--greenDk)':'var(--gold)'}">
+      <div class="t">${ok?'💪':'⚠️'} Comprometido com projetos: ${brl(compromisso)}/mês</div>
+      <div class="s" style="margin-top:4px">${ok?'Cabe na sua sobra livre deste mês ('+brl(sobraLivre)+').':'Acima da sua sobra livre ('+brl(sobraLivre)+'). Reveja prazos ou valores dos projetos.'}</div></div>`;
+  }
+  l.innerHTML=banner+db.metas.map(m=>`<div style="position:relative">${goalCard(m)}
+    <button class="del" style="position:absolute;top:14px;right:10px" onclick="delGoal('${m.id}')">✕</button></div>`).join('');
+}
+
+function renderDesafios(){
+  const l=document.getElementById('desafioList');
+  if(!db.desafios.length){l.innerHTML='<div class="empty" style="padding:18px">Nenhum desafio. Toque no + → 🔥 Desafio e teste seu controle no mês.</div>';return;}
+  const ordem=[...db.desafios].sort((a,b)=>(a.resolvido-b.resolvido)||b.mes.localeCompare(a.mes));
+  l.innerHTML=ordem.map(d=>{
+    const st=desafioStatus(d);
+    let tag,cor;
+    if(d.resolvido){tag=d.vitoria?'🏆 VENCIDO':'💀 falhou';cor=d.vitoria?'var(--gold)':'var(--bad)';}
+    else if(st.falhou){tag='⚠️ estourado';cor='var(--bad)';}
+    else{tag='em andamento';cor='var(--muted)';}
+    const barCor = (d.resolvido&&!d.vitoria)||st.falhou ? 'over':'';
+    return `<div class="item goal" style="display:block;position:relative">
+      <div class="grow"><div class="mid"><div class="t">${desafioLabel(d)}</div>
+        <div class="s">${mesNome(d.mes)} · <b style="color:${cor}">${tag}</b> · ${brl(st.atual)} / ${brl(st.alvo)}${d.resolvido&&d.vitoria?` · +${d.xp} XP`:''}</div></div></div>
+      <div class="gbar"><i class="${barCor}" style="width:${st.pct}%"></i></div>
+      <button class="del" style="position:absolute;top:14px;right:10px" onclick="delDesafio('${d.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function renderAch(){
+  const l=document.getElementById('achList');
+  const c=db.gamificacao.conquistas;
+  l.innerHTML = c.length
+    ? '<div class="galeria">'+c.map(a=>`<div class="badge"><div class="medal">🏅</div><div class="bl">${a.label}</div><div class="bd">${fmtDate(a.date)}</div></div>`).join('')+'</div>'
+    : '<div class="empty">Nenhuma conquista ainda. Comece a usar o app!</div>';
+}
+
+function diasTxt(n){if(n===0)return'é HOJE! 🎉';if(n===1)return'amanhã!';if(n<0)return'passou';return'faltam '+n+' dias';}
+function renderPresentes(){
+  const l=document.getElementById('presList');
+  if(!db.presentes.length){l.innerHTML='<div class="empty" style="padding:18px">Nenhum presente planejado. Toque no + → 🎁 Presente pra não esquecer nenhum aniversário.</div>';return;}
+  const ordem=[...db.presentes].sort((a,b)=>(diasAteAniv(a)??9999)-(diasAteAniv(b)??9999));
+  l.innerHTML=ordem.map(p=>{
+    const dias=diasAteAniv(p), comprado=presenteCompradoCiclo(p), occ=proxAniversario(p);
+    const quando=occ?occ.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}):'—';
+    const urgente=!comprado&&dias!=null&&dias<=15;
+    const cor=comprado?'var(--green2)':urgente?'var(--gold)':'var(--muted)';
+    const status=comprado?'✓ comprado este ano':diasTxt(dias);
+    return `<div class="item goal" style="display:block;position:relative">
+      <div class="grow"><div class="mid"><div class="t">🎁 ${p.pessoa}${p.ideia?` <span style="color:var(--muted);font-weight:600;font-size:13px">· ${p.ideia}</span>`:''}</div>
+        <div class="s">${quando} · <b style="color:${cor}">${status}</b>${p.budget?' · budget '+brl(p.budget):' · sem budget'}</div></div>
+        ${comprado?'':`<button class="btn ghost sm" onclick="comprarPresente('${p.id}')">Comprei</button>`}
+      </div>
+      <button class="del" style="position:absolute;top:14px;right:10px" onclick="delPresente('${p.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+function renderAnivAlert(){
+  const el=document.getElementById('dAniv');
+  const proximos=db.presentes.filter(p=>{const d=diasAteAniv(p);return !presenteCompradoCiclo(p)&&d!=null&&d>=0&&d<=30;})
+    .sort((a,b)=>diasAteAniv(a)-diasAteAniv(b));
+  if(!proximos.length){el.innerHTML='';return;}
+  el.innerHTML=proximos.map(p=>{
+    const dias=diasAteAniv(p), urgente=dias<=15;
+    return `<div class="item" style="border-color:${urgente?'var(--gold)':'var(--line)'}">
+      <div class="ic">🎂</div>
+      <div class="mid"><div class="t">Aniversário de ${p.pessoa} · ${diasTxt(dias)}</div>
+        <div class="s">${p.budget?'Reserve '+brl(p.budget)+(p.ideia?' · ideia: '+p.ideia:''):'Defina um budget na aba Metas'}</div></div>
+      <button class="btn ghost sm" onclick="comprarPresente('${p.id}')">Comprei</button>
+    </div>`;
+  }).join('');
+}
+const emptyMascot=msg=>`<div class="empty"><img src="${MASCOTE_URI}"><br>${msg}</div>`;
+function fmtDate(s){const[y,m,d]=s.split('-');return d?`${d}/${m}/${y}`:s;}
+
+/* ---------- BACKUP ---------- */
+function exportData(){
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='sobra-nada-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click(); toast('Backup exportado ✅');
+}
+function importData(input){
+  const f=input.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{try{db=migrate(JSON.parse(e.target.result));save();renderAll();toast('Dados importados ✅');}
+    catch(err){toast('⚠️ Arquivo inválido');}};
+  r.readAsText(f); input.value='';
+}
+function wipe(){if(confirm('Apagar TODOS os dados? Não dá pra desfazer.')){localStorage.removeItem(KEY);db=load();renderAll();toast('Tudo apagado');}}
+
+/* ---------- UI ---------- */
+function go(scr,btn){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('scr-'+scr).classList.add('active');
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById('fab').style.display=(scr==='set')?'none':'block';
+  window.scrollTo(0,0);
+}
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function openSheet(){
+  document.getElementById('recDate').value=todayStr();
+  document.getElementById('expDate').value=todayStr();
+  // popula categorias (gasto e desafio)
+  const sel=document.getElementById('expCat');
+  if(!sel.options.length)sel.innerHTML=CATS.map(c=>`<option value="${c.id}">${c.ic} ${c.id}</option>`).join('');
+  const selD=document.getElementById('desCat');
+  if(!selD.options.length)selD.innerHTML=CATS.map(c=>`<option value="${c.id}">${c.ic} ${c.id}</option>`).join('');
+  // seletor de cartão (repopula sempre, cartões mudam)
+  document.getElementById('expCart').innerHTML='<option value="">Sem cartão / à vista</option>'+db.cartoes.map(c=>`<option value="${c.id}">💳 ${c.nome||'Cartão'}</option>`).join('');
+  const selM=document.getElementById('empModal');
+  if(!selM.options.length)selM.innerHTML=REF_JUROS.map(r=>`<option value="${r.id}">${r.nome} (~${r.ref}% a.m.)</option>`).join('');
+  document.getElementById('empData').value=todayStr();
+  // modo default conforme tela ativa
+  const active=document.querySelector('.screen.active').id;
+  const m=active==='scr-exp'?'exp':active==='scr-goal'?'goal':'rec';
+  sheetMode(m);
+  document.getElementById('sheet').classList.add('open');
+}
+function closeSheet(){document.getElementById('sheet').classList.remove('open');
+  document.getElementById('recVal').value='';document.getElementById('goalName').value='';
+  document.getElementById('goalTarget').value='';document.getElementById('goalDeadline').value='';
+  document.getElementById('goalAporte').value='';document.getElementById('goalHint').textContent='';
+  document.getElementById('expVal').value='';document.getElementById('expDesc').value='';
+  document.getElementById('recRec').checked=false;document.getElementById('expFixo').checked=false;
+  document.getElementById('expParc').value='1';document.getElementById('parcHintTxt').textContent='';
+  document.getElementById('desVal').value='';
+  document.getElementById('presPessoa').value='';document.getElementById('presData').value='';
+  document.getElementById('presBudget').value='';document.getElementById('presIdeia').value='';
+  ['empNome','empPrincipal','empParcela','empN','empData'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('empHint').textContent='';}
+function desToggle(){
+  const cat=document.getElementById('desTipo').value==='categoria';
+  document.getElementById('desCatWrap').style.display=cat?'block':'none';
+  document.getElementById('desValLbl').textContent=cat?'Limite da categoria (R$)':'Sobra mínima do mês (R$)';
+}
+function updateGoalHint(){
+  const alvo=parseFloat(document.getElementById('goalTarget').value)||0;
+  const ap=parseFloat(document.getElementById('goalAporte').value)||0;
+  const prazo=document.getElementById('goalDeadline').value;
+  const el=document.getElementById('goalHint');
+  if(alvo>0&&prazo){
+    const meses=mesesAtePrazo(prazo), sug=Math.ceil(alvo/meses);
+    let txt=`🎯 Pra bater o prazo: guarde ~${brl(sug)}/mês (${meses} ${meses===1?'mês':'meses'}).`;
+    if(ap>0&&ap<sug)txt+=` Seu ritmo de ${brl(ap)} não chega a tempo.`;
+    else if(ap>=sug)txt+=` Seu ritmo de ${brl(ap)} dá conta. 💪`;
+    el.textContent=txt;
+  }else if(alvo>0&&ap>0){
+    const meses=Math.ceil(alvo/ap), eta=addMonths(thisMonth(),meses-1);
+    el.textContent=`📅 No ritmo de ${brl(ap)}/mês você chega em ${mesNome(eta)} (${meses} ${meses===1?'mês':'meses'}).`;
+  }else el.textContent='';
+}
+function updateParcHint(){
+  const n=Math.max(1,parseInt(document.getElementById('expParc').value)||1);
+  const v=parseFloat(document.getElementById('expVal').value)||0;
+  const el=document.getElementById('parcHintTxt');
+  if(n>1&&v>0){const fim=addMonths(thisMonth(),n-1);el.textContent=`${n}× de ${brl(v/n)} · termina em ${mesNome(fim)}`;}
+  else if(n>1){el.textContent=`Será dividido em ${n} parcelas mensais.`;}
+  else el.textContent='';
+}
+function sheetMode(m){
+  document.getElementById('formRec').style.display=m==='rec'?'block':'none';
+  document.getElementById('formExp').style.display=m==='exp'?'block':'none';
+  document.getElementById('formGoal').style.display=m==='goal'?'block':'none';
+  document.getElementById('formDes').style.display=m==='des'?'block':'none';
+  document.getElementById('formPres').style.display=m==='pres'?'block':'none';
+  document.getElementById('formEmp').style.display=m==='emp'?'block':'none';
+  document.getElementById('tabRec').classList.toggle('on',m==='rec');
+  document.getElementById('tabExp').classList.toggle('on',m==='exp');
+  document.getElementById('tabGoal').classList.toggle('on',m==='goal');
+  document.getElementById('tabDes').classList.toggle('on',m==='des');
+  document.getElementById('tabPres').classList.toggle('on',m==='pres');
+  document.getElementById('tabEmp').classList.toggle('on',m==='emp');
+  if(m==='des')desToggle();
+}
+document.getElementById('sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSheet();});
+document.getElementById('fecharSheet').addEventListener('click',e=>{if(e.target.id==='fecharSheet')closeFecharSheet();});
+
+let tT;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+document.getElementById('brandLogo').src=LOGO_URI;
+renderAll();
+
+/* PWA: registra o service worker (offline + instalável no iPhone) */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
