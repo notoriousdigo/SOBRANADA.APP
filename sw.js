@@ -1,5 +1,5 @@
 /* SOBRA NADA APP — service worker (offline-first) */
-const CACHE = 'sobra-nada-v8';
+const CACHE = 'sobra-nada-v9';
 const LOCAL = [
   './',
   './index.html',
